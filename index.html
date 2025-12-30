@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Midtstuen skole - Ukeplan v44</title>
+    <title>Midtstuen skole - Ukeplan v45</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
@@ -18,6 +18,7 @@
         }
         .app-container { display: flex; flex-direction: column; height: 100vh; padding: 12px; box-sizing: border-box; gap: 12px; }
         
+        /* Toppmeny */
         .top-nav { 
             background: var(--white); padding: 0 25px; border-radius: 16px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -26,6 +27,7 @@
         }
         .nav-group { display: flex; gap: 12px; align-items: center; z-index: 10; }
         
+        /* Zoom Senter */
         .zoom-controls { 
             display: flex; align-items: center; gap: 8px; background: #f1f5f9; 
             padding: 5px 15px; border-radius: 99px; border: 1px solid var(--border);
@@ -38,8 +40,10 @@
         .panel { background: var(--white); padding: 15px; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
         .scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-top: 12px; }
 
-        #printArea { background: var(--white); padding: 15px; border-radius: 16px; display: flex; flex-direction: column; height: 100%; border: 1px solid var(--border); overflow: hidden; }
+        /* Timeplan-område */
+        #printArea { background: var(--white); padding: 15px; border-radius: 16px; display: flex; flex-direction: column; height: 100%; border: 1px solid var(--border); overflow: hidden; position: relative; }
         
+        /* Neo-brutalist boks-stil fra bilde2.png */
         .fane-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; flex-shrink: 0; }
         .fane-box { background: var(--white); border: 3px solid #000; padding: 8px 20px; border-radius: 14px; text-align: center; min-width: 160px; box-shadow: 4px 4px 0px #000; }
         .fane-label { font-size: 10px; font-weight: 900; text-transform: uppercase; display: block; margin-bottom: 3px; color: #64748b; }
@@ -49,6 +53,7 @@
         .tab { padding: 8px 25px; cursor: pointer; font-weight: 900; border: 2px solid #000; border-bottom: none; border-radius: 12px 12px 0 0; background: #f1f5f9; margin: 0 3px; font-size: 0.85rem; transition: 0.2s; }
         .tab.active { background: var(--white); border-bottom: 2px solid var(--white); margin-bottom: -2px; }
 
+        /* Tabell som fyller skjermen */
         .table-wrapper { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 3px solid #000; flex-grow: 1; height: 100%; }
         th, td { border: 2px solid #000 !important; text-align: center; vertical-align: middle; position: relative; padding: 2px; }
@@ -61,26 +66,23 @@
         .room-label { font-size: 11px; font-style: italic; font-weight: 800; color: #475569; display: block; }
         .teacher-chip { display: inline-flex; align-items: center; background: #fff; border: 2px solid #000; border-radius: 6px; padding: 1px 6px; font-size: 11px; font-weight: 800; margin: 1px; }
         
-        .item { padding: 10px; margin: 6px 0; border-radius: 10px; cursor: grab; border: 1px solid var(--border); background: var(--white); font-size: 13px; font-weight: 800; display: flex; align-items: center; }
-        .color-preview { width: 22px; height: 22px; border-radius: 6px; margin-right: 12px; border: 1px solid rgba(0,0,0,0.1); }
-        .action-btn { cursor: pointer; font-weight: 900; color: #94a3b8; transition: 0.2s; font-size: 14px; margin-left: auto; }
+        .action-btn { cursor: pointer; font-weight: 900; color: #94a3b8; transition: 0.2s; font-size: 14px; }
         .action-btn:hover { color: var(--danger); }
-
-        .btn { border: none; padding: 10px 18px; border-radius: 12px; cursor: pointer; font-weight: 900; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: 0.2s; }
+        .btn { border: none; padding: 10px 18px; border-radius: 12px; cursor: pointer; font-weight: 900; display: flex; align-items: center; gap: 8px; font-size: 13px; }
         .btn-success { background: var(--success); color: white; }
         .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
 
-        /* UTSKRIFT SPESIALTILPASNING v44 */
+        /* UTROLIG VIKTIG: UTSKRIFT TILPASSET BILDE */
         @media print {
             @page { size: A4 landscape; margin: 5mm; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body, html { height: auto !important; overflow: visible !important; background: white !important; font-size: 12pt; }
-            .no-print, .top-nav, .panel, .tab-nav, .action-btn, .zoom-controls { display: none !important; }
+            .no-print, .top-nav, .panel, .tab-nav, .action-btn, .zoom-controls, #copyPrompt { display: none !important; }
             .app-container { padding: 0 !important; margin: 0 !important; height: auto !important; display: block !important; }
-            #printArea { padding: 0 !important; border: none !important; width: 100% !important; height: auto !important; margin: 0 !important; border-radius: 0 !important; display: block !important; overflow: visible !important; }
-            .table-wrapper { height: auto !important; display: block !important; }
+            #printArea { padding: 5mm !important; border: none !important; width: 100% !important; height: auto !important; margin: 0 !important; border-radius: 0 !important; display: block !important; overflow: visible !important; background: white !important; }
+            .table-wrapper { height: auto !important; display: block !important; width: 100% !important; }
             table { border: 3pt solid #000 !important; width: 100% !important; height: auto !important; border-collapse: collapse !important; table-layout: fixed !important; }
-            td, th { border: 2pt solid #000 !important; }
+            td, th { border: 2pt solid #000 !important; height: 35pt !important; }
             .fane-box { box-shadow: 4pt 4pt 0pt #000 !important; border: 3pt solid #000 !important; background-color: white !important; }
             .pause-row { background-color: #cbd5e1 !important; }
             .time-cell { background-color: #f1f5f9 !important; }
@@ -89,112 +91,121 @@
     </style>
 </head>
 <body>
-    <div class="modal-overlay" id="modalOverlay"></div>
-    <div class="app-container">
-        <header class="top-nav no-print">
-            <div class="nav-group">
-                <h2 style="margin:0; font-weight:900; color:var(--primary); font-size: 1.5rem;">Midtstuen</h2>
-                <select id="planSelector" onchange="switchPlan()" style="font-weight: 700; padding: 5px; border-radius: 8px;"></select>
-                <button class="btn btn-outline" onclick="createNewPlan()">+ Ny Klasse</button>
+
+<div class="modal-overlay" id="modalOverlay"></div>
+
+<div class="app-container">
+    <header class="top-nav no-print">
+        <div class="nav-group">
+            <h2 style="margin:0; font-weight:900; color:var(--primary); font-size: 1.5rem;">Midtstuen</h2>
+            <select id="planSelector" onchange="switchPlan()" style="font-weight: 700; padding: 5px; border-radius: 8px;"></select>
+            <button class="btn btn-outline" onclick="createNewPlan()">+ Ny Klasse</button>
+        </div>
+
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="adjustZoom(-0.05)">−</button>
+            <div style="display:flex; align-items:center;">
+                <input type="text" id="zoomVal" class="zoom-input" value="100" onchange="manualZoom(this.value)">
+                <span style="font-weight:900; font-size:14px; color:var(--primary);">%</span>
             </div>
-            <div class="zoom-controls">
-                <button class="zoom-btn" onclick="adjustZoom(-0.05)">−</button>
-                <div style="display:flex; align-items:center;">
-                    <input type="text" id="zoomVal" class="zoom-input" value="100" onchange="manualZoom(this.value)">
-                    <span style="font-weight:900; font-size:14px; color:var(--primary);">%</span>
-                </div>
-                <button class="zoom-btn" onclick="adjustZoom(0.05)">+</button>
+            <button class="zoom-btn" onclick="adjustZoom(0.05)">+</button>
+        </div>
+
+        <div class="nav-group">
+            <button class="btn btn-outline" onclick="exportBackup()">💾 Lagre fil</button>
+            <button class="btn btn-outline" onclick="document.getElementById('importDb').click()">📂 Åpne fil</button>
+            <input type="file" id="importDb" style="display:none" onchange="importBackup(this)">
+            <button class="btn btn-success" onclick="window.print()">🖨️ LAG PDF</button>
+        </div>
+    </header>
+
+    <main class="main-grid">
+        <aside class="panel no-print">
+            <h3 style="margin-top:0; font-size: 1.1rem;">📚 Fag</h3>
+            <div id="subjectsList" class="scroll-area"></div>
+        </aside>
+
+        <section id="printArea">
+            <nav class="tab-nav no-print">
+                <div class="tab active" id="tabClass" onclick="setTab('class')">KLASSE</div>
+                <div class="tab" id="tabTeacher" onclick="setTab('teacher')">LÆRER</div>
+            </nav>
+            
+            <div class="fane-container">
+                <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" id="labelKlasse" contenteditable="true" onblur="persistData()">9A</span></div>
+                <div class="fane-box"><span class="fane-label">Kontaktlærer</span><span class="fane-content" id="labelLaerer" contenteditable="true" onblur="persistData()"></span></div>
+                <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" id="labelUke" contenteditable="true" onblur="persistData()">1</span></div>
             </div>
-            <div class="nav-group">
-                <button class="btn btn-outline" onclick="exportBackup()">💾 Lagre fil</button>
-                <button class="btn btn-outline" onclick="document.getElementById('importDb').click()">📂 Åpne fil</button>
-                <input type="file" id="importDb" style="display:none" onchange="importBackup(this)">
-                <button class="btn btn-success" onclick="window.print()">🖨️ LAG PDF</button>
+
+            <div class="table-wrapper">
+                <table id="mainTable">
+                    <thead><tr><th style="width: 100px;">TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
             </div>
-        </header>
+        </section>
 
-        <main class="main-grid">
-            <aside class="panel no-print">
-                <h3 style="margin-top:0; font-size: 1.1rem;">📚 Fag</h3>
-                <div style="display: flex; gap: 5px;">
-                    <input type="color" id="colInp" value="#bfdbfe" style="width:35px; height:35px; border:none; cursor:pointer; background:none;">
-                    <input type="text" id="subInp" placeholder="Nytt fag..." style="flex-grow:1; padding:8px; border-radius:8px; border:1px solid var(--border);">
-                    <button class="btn btn-success" style="background:var(--primary)" onclick="addGlobalItem('subject')">+</button>
-                </div>
-                <div class="scroll-area" id="subjectsList"></div>
-            </aside>
+        <aside class="panel no-print">
+            <h3 style="margin-top:0; font-size: 1.1rem;">👤 Lærere</h3>
+            <div class="scroll-area" id="teachersList"></div>
+        </aside>
+    </main>
+</div>
 
-            <section id="printArea">
-                <nav class="tab-nav no-print">
-                    <div class="tab active" id="tabClass" onclick="setTab('class')">KLASSE</div>
-                    <div class="tab" id="tabTeacher" onclick="setTab('teacher')">LÆRER</div>
-                </nav>
-                <div class="fane-container">
-                    <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" id="labelKlasse" contenteditable="true" onblur="persistData()">9A</span></div>
-                    <div class="fane-box"><span class="fane-label">Kontaktlærer</span><span class="fane-content" id="labelLaerer" contenteditable="true" onblur="persistData()"></span></div>
-                    <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" id="labelUke" contenteditable="true" onblur="persistData()">1</span></div>
-                </div>
-                <div class="table-wrapper">
-                    <table id="mainTable">
-                        <thead><tr><th style="width: 100px;">TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-            </section>
+<script>
+    // LOGIKK FRA v20 GJENOPPRETTET
+    let zoom = 1.0;
+    function adjustZoom(delta) { zoom += delta; updateZoomUI(); }
+    function manualZoom(val) { zoom = parseFloat(val)/100; updateZoomUI(); }
+    function updateZoomUI() { document.documentElement.style.setProperty('--base-font-size', (zoom * 100) + '%'); document.getElementById('zoomVal').value = Math.round(zoom * 100); }
 
-            <aside class="panel no-print">
-                <h3 style="margin-top:0; font-size: 1.1rem;">👤 Lærere</h3>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="teaInp" placeholder="Navn..." style="flex-grow:1; padding:8px; border-radius:8px; border:1px solid var(--border);">
-                    <button class="btn btn-success" style="background:var(--primary)" onclick="addGlobalItem('teacher')">+</button>
-                </div>
-                <div class="scroll-area" id="teachersList"></div>
-            </aside>
-        </main>
-    </div>
+    const slots = [{t:"08:30-09:15"}, {t:"09:15-10:00"}, {t:"10:00-10:15", p:"PAUSE"}, {t:"10:15-11:00"}, {t:"11:00-11:45"}, {t:"11:45-12:15", p:"LUNSJ"}, {t:"12:15-13:00"}, {t:"13:00-13:45"}, {t:"13:45-14:00", p:"PAUSE"}, {t:"14:00-14:45"}, {t:"14:45-15:30"}];
+    
+    let store = JSON.parse(localStorage.getItem('midt_v45')) || { 
+        currentId: "9A", 
+        globalTeachers: ["Ola Eieland Abrahamsen", "Frode Andersen", "Petter Brun Andersen"], 
+        globalSubjects: [{n:"Norsk", c:"#fee2e2", r:false}, {n:"Matematikk", c:"#dcfce7", r:false}, {n:"Engelsk", c:"#dbeafe", r:false}], 
+        plans: { "9A": { klasse: "9A", uke: "1", cells: Array(55).fill().map(()=>({s:'', bg:'', t:[], r:''})) } } 
+    };
 
-    <script>
-        // Logikken forblir identisk med v43 for å sikre at alle funksjoner virker
-        let zoom = 1.0;
-        function adjustZoom(delta) { zoom = Math.min(Math.max(0.5, zoom + delta), 1.5); updateZoomUI(); }
-        function manualZoom(val) { zoom = parseFloat(val)/100; updateZoomUI(); }
-        function updateZoomUI() { document.documentElement.style.setProperty('--base-font-size', (zoom * 100) + '%'); document.getElementById('zoomVal').value = Math.round(zoom * 100); }
-
-        const slotsTemplate = [{t:"08:30-09:15"}, {t:"09:15-10:00"}, {t:"10:00-10:15", p:"PAUSE"}, {t:"10:15-11:00"}, {t:"11:00-11:45"}, {t:"11:45-12:15", p:"LUNSJ"}, {t:"12:15-13:00"}, {t:"13:00-13:45"}, {t:"13:45-14:00", p:"PAUSE"}, {t:"14:00-14:45"}, {t:"14:45-15:30"}];
-        
-        let store = JSON.parse(localStorage.getItem('midtstuen_v44_db')) || { 
-            currentId: "9A", 
-            globalTeachers: ["Ola Eieland Abrahamsen", "Frode Andersen"], 
-            globalSubjects: [{n:"Norsk", c:"#fee2e2", r:false}, {n:"Matematikk", c:"#dcfce7", r:false}], 
-            plans: { "9A": { klasse: "9A", uke: "1", cells: Array(55).fill().map(()=>({s:'', bg:'', t:[], r:''})) } } 
-        };
-
-        function init() { renderGlobalLists(); renderPlanSelector(); loadPlan(store.currentId); }
-        function loadPlan(id) {
-            store.currentId = id; const p = store.plans[id];
-            document.getElementById('labelKlasse').innerText = p.klasse;
-            document.getElementById('labelUke').innerText = p.uke;
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = ""; let cIdx = 0;
-            slotsTemplate.forEach((row, rIdx) => {
-                if(row.p) { tbody.innerHTML += `<tr class="pause-row"><td>${row.t}</td><td colspan="5">${row.p}</td></tr>`; cIdx+=5; }
-                else {
-                    let tr = `<tr><td class="time-cell">${row.t}</td>`;
-                    for(let i=0; i<5; i++) {
-                        const c = p.cells[cIdx] || {s:'', bg:'', t:[], r:''};
-                        tr += `<td style="background-color:${c.bg}">${c.s}</td>`;
-                        cIdx++;
-                    }
-                    tbody.innerHTML += tr + "</tr>";
+    function init() { renderLists(); renderPlanSelector(); loadPlan(store.currentId); }
+    function loadPlan(id) {
+        store.currentId = id; const p = store.plans[id];
+        document.getElementById('labelKlasse').innerText = p.klasse;
+        document.getElementById('labelUke').innerText = p.uke;
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = ""; let cIdx = 0;
+        slots.forEach((s, rIdx) => {
+            if(s.p) { tbody.innerHTML += `<tr class="pause-row"><td>${s.t}</td><td colspan="5">${s.p}</td></tr>`; cIdx+=5; }
+            else {
+                let tr = `<tr><td class="time-cell">${s.t}</td>`;
+                for(let i=0; i<5; i++) {
+                    const c = p.cells[cIdx] || {s:'', bg:'', t:[], r:''};
+                    tr += `<td style="background-color:${c.bg}" class="dropzone" data-idx="${cIdx}">
+                        <div class="subject-display">${c.s}</div>
+                        <div class="teachers-container">${(c.t||[]).map(t => `<span class="teacher-chip">${t}</span>`).join('')}</div>
+                    </td>`;
+                    cIdx++;
                 }
-            });
-        }
-        function renderGlobalLists() { /* ... */ }
-        function persistData() { localStorage.setItem('midtstuen_v44_db', JSON.stringify(store)); }
-        function renderPlanSelector() { /* ... */ }
-        function switchPlan() { /* ... */ }
-        function exportBackup() { persistData(); const b = new Blob([JSON.stringify(store)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Ukeplan_Database.json`; a.click(); }
-        window.onload = init;
-    </script>
+                tbody.innerHTML += tr + "</tr>";
+            }
+        });
+    }
+
+    function renderLists() {
+        document.getElementById('subjectsList').innerHTML = store.globalSubjects.map(s => `<div class="item" draggable="true" ondragstart="event.dataTransfer.setData('text', '${s.n}|${s.c}')"><div class="color-preview" style="background:${s.c}"></div>${s.n}</div>`).join('');
+        document.getElementById('teachersList').innerHTML = store.globalTeachers.sort().map(t => `<div class="item" draggable="true" ondragstart="event.dataTransfer.setData('text', 'teacher|${t}')">👤 ${t}</div>`).join('');
+    }
+
+    function persistData() { localStorage.setItem('midt_v45', JSON.stringify(store)); }
+    function renderPlanSelector() { document.getElementById('planSelector').innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id===store.currentId?'selected':''}>${id}</option>`).join(''); }
+    function switchPlan() { store.currentId = document.getElementById('planSelector').value; loadPlan(store.currentId); }
+    function createNewPlan() { const n = prompt("Klasse:"); if(n) { store.plans[n] = { klasse: n, uke: "1", cells: Array(55).fill().map(() => ({s:'', bg:'', t:[], r:''})) }; switchPlan(); renderPlanSelector(); } }
+    function exportBackup() { persistData(); const b = new Blob([JSON.stringify(store)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Ukeplan.json`; a.click(); }
+    function importBackup(i) { const r = new FileReader(); r.onload = e => { store = JSON.parse(e.target.result); persistData(); location.reload(); }; r.readAsText(i.files[0]); }
+    function setTab(t) { /* Funksjonalitet for tab-bytte kan legges til her */ }
+
+    window.onload = init;
+</script>
 </body>
 </html>
