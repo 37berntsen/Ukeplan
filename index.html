@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Midtstuen skole - Ukeplan v37</title>
+    <title>Midtstuen skole - Ukeplan v38</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
@@ -16,98 +16,108 @@
             background: var(--bg); color: var(--text); overflow: hidden; 
             font-size: var(--base-font-size);
         }
-        .app-container { display: flex; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; gap: 8px; }
+        .app-container { display: flex; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; gap: 10px; }
         
         .top-nav { 
             background: var(--white); padding: 0 20px; border-radius: 12px; 
             display: flex; justify-content: space-between; align-items: center; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border);
-            min-height: 55px; flex-shrink: 0; position: relative;
+            min-height: 60px; flex-shrink: 0; position: relative;
         }
+        
         .zoom-controls { 
-            display: flex; align-items: center; gap: 8px; background: #f8fafc; 
-            padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; background: #f8fafc; 
+            padding: 5px 20px; border-radius: 99px; border: 1px solid var(--border);
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
         }
-        .zoom-btn { background: var(--white); border: 1px solid var(--border); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .zoom-btn { background: var(--white); border: 1px solid var(--border); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .zoom-input { width: 45px; border: none; background: transparent; font-weight: 900; text-align: center; font-size: 0.85rem; color: var(--primary); outline: none; cursor: edit; }
 
-        .main-grid { display: grid; grid-template-columns: 250px 1fr 250px; gap: 10px; flex-grow: 1; min-height: 0; }
-        
-        /* Hvert panel får sitt eget rullefelt */
-        .panel { background: var(--white); padding: 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .main-grid { display: grid; grid-template-columns: 250px 1fr 250px; gap: 12px; flex-grow: 1; min-height: 0; overflow: hidden; }
+        .panel { background: var(--white); padding: 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
         .scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
 
-        #printArea { background: var(--white); padding: 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
-        .table-container { flex-grow: 1; overflow-y: auto; border: 2px solid #000; }
+        #printArea { background: var(--white); padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow: hidden; }
         
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        thead { position: sticky; top: 0; z-index: 20; }
-        th, td { border: 1px solid #000 !important; text-align: center; vertical-align: middle; position: relative; padding: 4px; }
-        th { background: #f1f5f9; font-size: 0.75rem; font-weight: 900; height: 35px; }
+        /* Timeplan-tabell som fyller tilgjengelig plass */
+        .table-wrapper { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2.5px solid #000; flex-grow: 1; height: 100%; }
+        th, td { border: 1.5px solid #000 !important; text-align: center; vertical-align: middle; position: relative; padding: 2px; }
+        th { background: #f1f5f9; font-size: 0.8rem; font-weight: 900; height: 5%; }
 
-        .time-cell { width: 85px; font-size: 0.7rem; font-weight: 800; background: #f8fafc; position: sticky; left: 0; z-index: 10; }
-        .pause-row { background: #cbd5e1 !important; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; height: 25px; }
-        .dropzone { min-height: 50px; height: 60px; }
+        .time-cell { width: 85px; font-size: 0.7rem; font-weight: 800; background: #f8fafc; }
+        .pause-row { background: #cbd5e1 !important; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; height: 4%; }
+        
+        /* Celler krymper/strekker seg proporsjonalt */
+        .dropzone { height: auto; }
 
-        .subject-display { font-weight: 900; font-size: 0.85rem; text-transform: uppercase; }
+        .subject-display { font-weight: 900; font-size: 0.85rem; text-transform: uppercase; line-height: 1; }
         .room-label { font-size: 0.65rem; font-style: italic; font-weight: 700; color: #475569; display: block; }
-        .teacher-chip { display: inline-flex; align-items: center; background: #fff; border: 1.5px solid #000; border-radius: 4px; padding: 1px 4px; font-size: 0.6rem; font-weight: 800; margin: 1px; }
-        .action-btn { cursor: pointer; color: #94a3b8; margin-left: auto; }
-        .action-btn:hover { color: var(--danger); }
+        .teacher-chip { display: inline-flex; align-items: center; background: #fff; border: 1px solid #000; border-radius: 4px; padding: 0 4px; font-size: 0.6rem; font-weight: 800; margin: 1px; }
 
         .item { padding: 8px; margin: 4px 0; border-radius: 6px; cursor: grab; border: 1px solid var(--border); background: var(--white); font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; }
-        .color-preview { width: 16px; height: 16px; border-radius: 4px; margin-right: 8px; border: 1px solid rgba(0,0,0,0.1); }
-        .btn { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
-        .tab-nav { display: flex; justify-content: center; margin-bottom: 8px; border-bottom: 2px solid #000; }
-        .tab { padding: 5px 15px; cursor: pointer; font-weight: 800; border: 2px solid #000; border-bottom: none; border-radius: 6px 6px 0 0; background: #e2e8f0; margin: 0 1px; font-size: 0.75rem; }
+        .color-preview { width: 18px; height: 18px; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1); }
+        .action-btn { cursor: pointer; color: #94a3b8; margin-left: auto; font-size: 0.8rem; }
+        .action-btn:hover { color: var(--danger); }
+
+        .btn { border: none; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: var(--white); border: 1px solid var(--border); color: var(--text); }
+
+        .tab-nav { display: flex; justify-content: center; margin-bottom: 5px; border-bottom: 2px solid #000; }
+        .tab { padding: 5px 20px; cursor: pointer; font-weight: 800; border: 2px solid #000; border-bottom: none; border-radius: 8px 8px 0 0; background: #e2e8f0; margin: 0 2px; font-size: 0.75rem; }
         .tab.active { background: var(--white); border-bottom: 2px solid var(--white); margin-bottom: -2px; }
 
         @media print {
             .no-print { display: none !important; }
-            body, html { height: auto; overflow: visible; }
-            .app-container { height: auto; }
-            .table-container { overflow: visible; border: none; }
-            table { height: auto; page-break-inside: avoid; }
+            #printArea { padding: 0; border: none; width: 100%; height: 100%; }
+            table { height: 95% !important; border: 3pt solid #000 !important; }
         }
     </style>
 </head>
 <body>
-    <div class="modal-overlay" id="modalOverlay"></div>
+
+    <div class="modal-overlay" id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000;"></div>
     <div id="roomModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:25px; border-radius:15px; border:3px solid var(--primary); z-index:10001; text-align:center;">
-        <h3 id="modalSubjectTitle">Velg Rom</h3>
+        <h3 id="modalSubjectTitle" style="margin:0">Romvalg</h3>
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
-            <button class="btn" style="background:var(--primary); color:white; justify-content:center" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
-            <button class="btn" style="background:var(--white); border:1px solid var(--border); justify-content:center" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
+            <button class="btn btn-success" style="background:var(--primary); justify-content:center" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
+            <button class="btn btn-outline" style="justify-content:center" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
         </div>
     </div>
 
     <div class="app-container">
         <header class="top-nav no-print">
             <div style="display:flex; gap:8px; align-items:center;">
-                <span style="font-weight:900; color:var(--primary);">Midtstuen</span>
-                <select id="planSelector" onchange="switchPlan()"></select>
-                <button class="btn" style="border:1px solid var(--border)" onclick="createNewPlan()">+</button>
+                <span style="font-weight:900; font-size:1.3rem; color:var(--primary);">Midtstuen</span>
+                <select id="planSelector" onchange="switchPlan()" style="padding:4px; border-radius:4px;"></select>
+                <button class="btn btn-outline" onclick="createNewPlan()" style="padding:4px 8px">+</button>
             </div>
+
             <div class="zoom-controls">
                 <button class="zoom-btn" onclick="adjustZoom(-0.05)">−</button>
-                <span style="font-size:0.6rem; font-weight:900;">SKALA</span>
+                <div style="display:flex; align-items:center;">
+                    <input type="text" id="zoomVal" class="zoom-input" value="100" onchange="manualZoom(this.value)">
+                    <span style="font-weight:900; font-size:0.8rem; color:var(--primary);">%</span>
+                </div>
                 <button class="zoom-btn" onclick="adjustZoom(0.05)">+</button>
             </div>
-            <div style="display:flex; gap:5px;">
-                <button class="btn" style="border:1px solid var(--border)" onclick="exportBackup()">💾 Lagre</button>
-                <button class="btn" style="border:1px solid var(--border)" onclick="document.getElementById('importDb').click()">📂 Åpne</button>
+
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-outline" onclick="exportBackup()">💾 Lagre</button>
+                <button class="btn btn-outline" onclick="document.getElementById('importDb').click()">📂 Åpne</button>
                 <input type="file" id="importDb" style="display:none" onchange="importBackup(this)">
-                <button class="btn" style="background:var(--success); color:white;" onclick="window.print()">🖨️ PDF</button>
+                <button class="btn btn-success" onclick="window.print()">🖨️ PDF</button>
             </div>
         </header>
 
         <main class="main-grid">
             <aside class="panel no-print">
-                <h4 style="margin:0">Fag</h4>
+                <h4 style="margin:0; font-size:0.8rem">📚 Fag</h4>
                 <div style="display:flex; gap:4px; margin:8px 0;">
-                    <input type="color" id="colInp" value="#bfdbfe" style="width:25px; height:25px; border:none;">
-                    <input type="text" id="subInp" placeholder="Nytt..." style="flex:1; padding:4px; font-size:0.7rem;">
-                    <button onclick="addGlobalItem('subject')" style="padding:4px">+</button>
+                    <input type="color" id="colInp" value="#bfdbfe" style="width:25px; height:25px; border:none; background:none;">
+                    <input type="text" id="subInp" placeholder="Nytt..." style="flex:1; padding:4px; font-size:0.75rem; border-radius:4px; border:1px solid var(--border);">
+                    <button class="btn btn-outline" onclick="addGlobalItem('subject')" style="padding:4px">+</button>
                 </div>
                 <div id="subjectsList" class="scroll-area"></div>
             </aside>
@@ -117,11 +127,11 @@
                     <div class="tab active" id="tabClass" onclick="setTab('class')">KLASSE</div>
                     <div class="tab" id="tabTeacher" onclick="setTab('teacher')">LÆRER</div>
                 </div>
-                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
-                    <div style="border:2px solid #000; padding:4px 10px; border-radius:8px; font-weight:900; font-size:0.8rem;">KLASSE: <span id="labelKlasse" contenteditable="true">9A</span></div>
-                    <div style="border:2px solid #000; padding:4px 10px; border-radius:8px; font-weight:900; font-size:0.8rem;">UKE: <span id="labelUke" contenteditable="true">1</span></div>
+                <div style="display:flex; justify-content:center; gap:12px; margin-bottom:10px;">
+                    <div style="border:2px solid #000; padding:4px 12px; border-radius:8px; font-weight:900;">KLASSE: <span id="labelKlasse" contenteditable="true">9A</span></div>
+                    <div style="border:2px solid #000; padding:4px 12px; border-radius:8px; font-weight:900;">UKE: <span id="labelUke" contenteditable="true">1</span></div>
                 </div>
-                <div class="table-container">
+                <div class="table-wrapper">
                     <table id="mainTable">
                         <thead><tr><th style="width:85px;">TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
                         <tbody id="tableBody"></tbody>
@@ -130,36 +140,44 @@
             </section>
 
             <aside class="panel no-print">
-                <h4 style="margin:0">Lærere</h4>
+                <h4 style="margin:0; font-size:0.8rem">👤 Lærere</h4>
                 <div style="display:flex; gap:4px; margin:8px 0;">
-                    <input type="text" id="teaInp" placeholder="Navn..." style="flex:1; padding:4px; font-size:0.7rem;">
-                    <button onclick="addGlobalItem('teacher')" style="padding:4px">+</button>
+                    <input type="text" id="teaInp" placeholder="Navn..." style="flex:1; padding:4px; font-size:0.75rem; border-radius:4px; border:1px solid var(--border);">
+                    <button class="btn btn-outline" onclick="addGlobalItem('teacher')" style="padding:4px">+</button>
                 </div>
+                <button class="btn btn-outline" style="width:100%; font-size:0.6rem; margin-bottom:8px" onclick="document.getElementById('excelInput').click()">📥 Import Excel</button>
+                <input type="file" id="excelInput" style="display:none" onchange="handleExcelImport(this)">
                 <div id="teachersList" class="scroll-area"></div>
             </aside>
         </main>
     </div>
 
     <script>
-        let currentZoom = 1.0;
-        function adjustZoom(delta) { currentZoom += delta; document.documentElement.style.setProperty('--base-font-size', (currentZoom * 100) + '%'); }
-        
+        let zoom = 1.0;
+        function adjustZoom(delta) { zoom += delta; updateZoomUI(); }
+        function manualZoom(val) { zoom = parseFloat(val)/100; updateZoomUI(); }
+        function updateZoomUI() { 
+            document.documentElement.style.setProperty('--base-font-size', (zoom * 100) + '%');
+            document.getElementById('zoomVal').value = Math.round(zoom * 100);
+        }
+
         const structure = [['lesson','08:30'],['lesson','09:15'],['pause','10:00','Pause'],['lesson','10:15'],['lesson','11:00'],['pause','11:45','Lunsj'],['lesson','12:15'],['lesson','13:00'],['pause','13:45','Pause'],['lesson','14:00']];
-        let store = JSON.parse(localStorage.getItem('midt_v37')) || { currentId:"9A", globalTeachers:[], globalSubjects:[], plans:{"9A":{klasse:"9A", uke:"1", cells:Array(50).fill().map(()=>({s:'',bg:'',t:[],r:''}))}} };
+        let store = JSON.parse(localStorage.getItem('midt_v38')) || { currentId:"9A", globalTeachers:[], globalSubjects:[], plans:{"9A":{klasse:"9A", uke:"1", cells:Array(50).fill().map(()=>({s:'',bg:'',t:[],r:''}))}} };
 
         function init() { renderLists(); renderPlanSelector(); loadPlan(store.currentId); setupDrag(); }
+        
         function loadPlan(id) {
             const p = store.plans[id]; document.getElementById('labelKlasse').innerText = p.klasse; document.getElementById('labelUke').innerText = p.uke;
             let html = ""; let cIdx = 0;
-            structure.forEach((row, rIdx) => {
+            structure.forEach(row => {
                 if(row[0]==='pause') { html += `<tr class="pause-row"><td>${row[1]}</td><td colspan="5">${row[2]}</td></tr>`; cIdx+=5; }
                 else {
-                    html += `<tr><td class="time-cell">${row[1]}</td>`;
+                    html += `<tr><td class="time-cell" contenteditable="true">${row[1]}</td>`;
                     for(let i=0; i<5; i++) {
                         const c = p.cells[cIdx] || {s:'',bg:'',t:[],r:''};
-                        html += `<td class="dropzone" style="background:${c.bg}" data-idx="${cIdx}">
+                        html += `<td class="dropzone" style="background:${c.bg}" data-idx="${cIdx}" ondragover="event.preventDefault()" ondrop="handleDrop(event, ${cIdx})">
                             <div class="subject-display">${c.s}</div><div class="room-label">${c.r||''}</div>
-                            <div style="display:flex;flex-wrap:wrap;justify-content:center">${(c.t||[]).map(t=>`<span class="teacher-chip">${t}<span onclick="removeT(${cIdx},'${t}')" style="cursor:pointer;margin-left:3px;">✕</span></span>`).join('')}</div>
+                            <div style="display:flex;flex-wrap:wrap;justify-content:center">${(c.t||[]).map(t=>`<span class="teacher-chip">${t}<span onclick="removeT(${cIdx},'${t}')" style="cursor:pointer;margin-left:3px;color:red;">✕</span></span>`).join('')}</div>
                             ${c.s?`<span onclick="clearC(${cIdx})" style="position:absolute;top:1px;right:1px;cursor:pointer;font-size:10px;">✕</span>`:''}
                         </td>`;
                         cIdx++;
@@ -171,16 +189,18 @@
         }
 
         function setupDrag() {
-            document.addEventListener('dragstart', e => { const itm = e.target.closest('.item'); if(itm) e.dataTransfer.setData('text', itm.dataset.val+'|'+itm.dataset.type+'|'+itm.dataset.col); });
-            document.addEventListener('dragover', e => e.preventDefault());
-            document.addEventListener('drop', e => {
-                const z = e.target.closest('.dropzone'); if(!z) return;
-                const [val, type, col] = e.dataTransfer.getData('text').split('|');
-                const idx = z.dataset.idx; const p = store.plans[store.currentId];
-                if(type==='subject') { p.cells[idx].s = val; p.cells[idx].bg = col; }
-                else { if(!p.cells[idx].t.includes(val)) p.cells[idx].t.push(val); }
-                save(); loadPlan(store.currentId);
+            document.addEventListener('dragstart', e => { 
+                const itm = e.target.closest('.item'); 
+                if(itm) e.dataTransfer.setData('text', itm.dataset.val+'|'+itm.dataset.type+'|'+itm.dataset.col); 
             });
+        }
+
+        function handleDrop(e, idx) {
+            const [val, type, col] = e.dataTransfer.getData('text').split('|');
+            const p = store.plans[store.currentId];
+            if(type==='subject') { p.cells[idx].s = val; p.cells[idx].bg = col; }
+            else { if(!p.cells[idx].t.includes(val)) p.cells[idx].t.push(val); }
+            save(); loadPlan(store.currentId);
         }
 
         function renderLists() {
@@ -188,16 +208,18 @@
             document.getElementById('teachersList').innerHTML = store.globalTeachers.sort().map(t=>`<div class="item" draggable="true" data-val="${t}" data-type="teacher">👤 ${t}<span class="action-btn" onclick="delItem('t','${t}')">✕</span></div>`).join('');
         }
 
-        function delItem(type, val) { if(type==='s') store.globalSubjects.splice(val,1); else store.globalTeachers = store.globalTeachers.filter(t=>t!==val); renderLists(); save(); }
+        function delItem(type, val) { if(confirm("Slette permanent?")) { if(type==='s') store.globalSubjects.splice(val,1); else store.globalTeachers = store.globalTeachers.filter(t=>t!==val); renderLists(); save(); } }
         function addGlobalItem(type) { const inp = document.getElementById(type==='subject'?'subInp':'teaInp'); if(!inp.value) return; if(type==='subject') store.globalSubjects.push({n:inp.value, c:document.getElementById('colInp').value}); else store.globalTeachers.push(inp.value); inp.value=""; renderLists(); save(); }
-        function save() { localStorage.setItem('midt_v37', JSON.stringify(store)); }
+        function save() { localStorage.setItem('midt_v38', JSON.stringify(store)); }
         function removeT(idx, t) { store.plans[store.currentId].cells[idx].t = store.plans[store.currentId].cells[idx].t.filter(x=>x!==t); save(); loadPlan(store.currentId); }
         function clearC(idx) { store.plans[store.currentId].cells[idx] = {s:'',bg:'',t:[],r:''}; save(); loadPlan(store.currentId); }
         function renderPlanSelector() { document.getElementById('planSelector').innerHTML = Object.keys(store.plans).map(id=>`<option value="${id}" ${id===store.currentId?'selected':''}>${id}</option>`).join(''); }
         function switchPlan() { store.currentId = document.getElementById('planSelector').value; loadPlan(store.currentId); }
-        function createNewPlan() { const n = prompt("Navn:"); if(n) { store.plans[n] = {klasse:n, uke:"1", cells:Array(50).fill().map(()=>({s:'',bg:'',t:[],r:''}))}; store.currentId = n; renderPlanSelector(); loadPlan(n); save(); } }
+        function createNewPlan() { const n = prompt("Klassenavn:"); if(n) { store.plans[n] = {klasse:n, uke:"1", cells:Array(50).fill().map(()=>({s:'',bg:'',t:[],r:''}))}; store.currentId = n; renderPlanSelector(); loadPlan(n); save(); } }
         function exportBackup() { save(); const b = new Blob([JSON.stringify(store)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Ukeplan.json`; a.click(); }
         function importBackup(i) { const r = new FileReader(); r.onload = e => { store = JSON.parse(e.target.result); save(); location.reload(); }; r.readAsText(i.files[0]); }
+        function handleExcelImport(i) { const r = new FileReader(); r.onload = e => { const d = new Uint8Array(e.target.result); const wb = XLSX.read(d, {type:'array'}); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); rows.forEach(row => { if(row[0] && row[1]) { const n = row[1].toString().trim() + " " + row[0].toString().trim(); if(!store.globalTeachers.includes(n)) store.globalTeachers.push(n); } }); renderLists(); save(); }; r.readAsArrayBuffer(i.files[0]); }
+
         window.onload = init;
     </script>
 </body>
