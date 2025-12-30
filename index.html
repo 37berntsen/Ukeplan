@@ -6,7 +6,100 @@
     <title>Midtstuen skole - Ukeplan v46</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        :root { 
+        :root { <!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Midtstuen skole - Ukeplan v47</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+    
+    <style>
+        /* Beholder ditt nøyaktige design fra Timeplan-MID-2.html */
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; --success: #16a34a; --white: #ffffff; --border: #cbd5e1; }
+        body, html { height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        .app-container { display: flex; flex-direction: column; height: 100vh; padding: 15px; box-sizing: border-box; gap: 15px; }
+        
+        /* Stiler for innloggingsskjerm */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20000; text-align: center; }
+        #mainAppContent { display: none; height: 100vh; flex-direction: column; }
+        
+        .btn-ms { background: #2f2f2f; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 16px; }
+        
+        /* (Resten av dine stiler fra Timeplan-MID-2.html inkluderes her...) */
+        .top-nav { background: var(--white); padding: 12px 25px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .fane-box { background: var(--white); border: 3px solid #000; padding: 10px 20px; border-radius: 12px; text-align: center; min-width: 150px; box-shadow: 4px 4px 0px #000; }
+        .fane-label { font-size: 10px; font-weight: 900; text-transform: uppercase; display: block; margin-bottom: 3px; }
+        .fane-content { font-weight: 900; font-size: 1.1rem; outline: none; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 3px solid #000; flex-grow: 1; height: 100%; }
+        th, td { border: 2px solid #000 !important; text-align: center; vertical-align: middle; position: relative; }
+        .dropzone { min-height: 50px; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="fane-box" style="margin-bottom: 30px; padding: 40px;">
+        <h1 style="margin:0; color:var(--primary); font-size: 2.5rem;">Midtstuen</h1>
+        <p style="font-weight: 800; margin-top: 10px;">Ukeplanlegger v47</p>
+    </div>
+    <button class="btn-ms" onclick="handleLogin()">
+        <img src="https://docs.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-azure-ad-apps/ms-symbollockup_signin_light.png" alt="MS" style="height:20px;">
+        Logg inn med @osloskolen
+    </button>
+</div>
+
+<div id="mainAppContent" class="app-container">
+    <div class="top-nav">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <h2 style="margin:0; font-weight:900; color:var(--primary);">Midtstuen</h2>
+            <span id="userNameDisplay" style="font-weight:700; font-size:12px; color:#64748b; background:#f1f5f9; padding:4px 10px; border-radius:20px;"></span>
+        </div>
+        <button class="btn" style="border:1px solid var(--border); font-size:11px;" onclick="handleLogout()">Logg ut</button>
+    </div>
+    </div>
+
+<script>
+    // Din nye Azure-konfigurasjon
+    const msalConfig = {
+        auth: {
+            clientId: "5a7c5e44-523e-4951-a527-d88c900a922c",
+            authority: "https://login.microsoftonline.com/common",
+            redirectUri: "https://37berntsen.github.io/Ukeplan/"
+        },
+        cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
+    };
+
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+    async function handleLogin() {
+        try {
+            await msalInstance.loginPopup({ scopes: ["user.read"] });
+            checkUser();
+        } catch (error) { console.error(error); }
+    }
+
+    function handleLogout() {
+        msalInstance.logoutPopup().then(() => location.reload());
+    }
+
+    function checkUser() {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainAppContent').style.display = 'flex';
+            document.getElementById('userNameDisplay').innerText = "Bruker: " + accounts[0].name;
+            if (typeof init === "function") init(); // Starter ukeplan-logikken
+        }
+    }
+
+    // Her følger din eksisterende ukeplan-logikk fra Timeplan-MID-2.html
+    // ...
+    window.onload = checkUser;
+</script>
+</body>
+</html>
             --primary: #2563eb; --bg: #f8fafc; --text: #1e293b;
             --danger: #ef4444; --success: #16a34a; --white: #ffffff; --border: #cbd5e1;
             --base-font-size: 100%; 
@@ -204,3 +297,4 @@
 </script>
 </body>
 </html>
+
