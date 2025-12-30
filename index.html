@@ -3,174 +3,283 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Midtstuen skole - Ukeplan v27</title>
+    <title>Midtstuen skole - Ukeplan v28</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
             --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; --success: #16a34a; --white: #ffffff; --border: #cbd5e1;
-            --base-font-size: 100%; /* Variabel for zoom */
+            --base-font-size: 100%; 
         }
         body, html { 
             height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; 
-            font-size: var(--base-font-size); 
+            font-size: var(--base-font-size);
         }
         .app-container { display: flex; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; gap: 10px; }
         
-        .top-nav { background: var(--white); padding: 10px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        /* Toppmeny med Zoom i midten */
+        .top-nav { background: var(--white); padding: 10px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid var(--border); }
         .nav-group { display: flex; gap: 10px; align-items: center; }
         
-        /* Zoom-kontroller */
-        .zoom-controls { display: flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border); }
-        .zoom-btn { background: white; border: 1px solid var(--border); border-radius: 4px; width: 28px; height: 28px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .zoom-controls { 
+            display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 5px 15px; border-radius: 30px; border: 1px solid var(--border);
+            position: absolute; left: 50%; transform: translateX(-50%);
+        }
+        .zoom-btn { background: white; border: 1px solid var(--border); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .zoom-btn:hover { background: var(--primary); color: white; }
 
-        .main-grid { display: grid; grid-template-columns: 260px 1fr 260px; gap: 10px; flex-grow: 1; min-height: 0; }
-        .panel { background: var(--white); padding: 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
-        .scroll-area { flex-grow: 1; overflow-y: auto; }
+        .main-grid { display: grid; grid-template-columns: 280px 1fr 280px; gap: 10px; flex-grow: 1; min-height: 0; }
+        .panel { background: var(--white); padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+        .scroll-area { flex-grow: 1; overflow-y: auto; margin-top: 10px; }
 
-        #printArea { background: var(--white); padding: 15px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; border: 1px solid var(--border); overflow: hidden; }
+        #printArea { background: var(--white); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; border: 1px solid var(--border); position: relative; }
         
-        .fane-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; }
-        .fane-box { background: var(--white); border: 2px solid #000; padding: 5px 15px; border-radius: 8px; text-align: center; min-width: 120px; }
-        .fane-label { font-size: 0.7rem; font-weight: 900; text-transform: uppercase; display: block; }
-        .fane-content { font-weight: 900; font-size: 1rem; outline: none; }
+        .fane-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
+        .fane-box { background: var(--white); border: 3px solid #000; padding: 8px 15px; border-radius: 10px; text-align: center; min-width: 130px; box-shadow: 3px 3px 0px #000; }
+        .fane-label { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; display: block; }
+        .fane-content { font-weight: 900; font-size: 1.1rem; outline: none; }
 
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid #000; flex-grow: 1; height: 1%; }
-        th, td { border: 1px solid #000 !important; text-align: center; vertical-align: middle; position: relative; padding: 2px; }
-        th { background: #f8fafc; font-size: 0.8rem; font-weight: 900; height: 30px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 3px solid #000; flex-grow: 1; height: 100%; }
+        th, td { border: 2px solid #000 !important; text-align: center; vertical-align: middle; position: relative; }
+        th { background: #f1f5f9; font-size: 0.8rem; font-weight: 900; height: 35px; }
 
-        .time-cell { width: 80px; font-size: 0.75rem; font-weight: bold; background: #f1f5f9; }
-        .subject-display { font-weight: 900; font-size: 0.85rem; text-transform: uppercase; line-height: 1; }
-        .room-label { font-size: 0.65rem; font-style: italic; color: #475569; display: block; }
+        .time-cell { width: 90px; font-size: 0.7rem; font-weight: bold; background: #f8fafc; }
+        .subject-display { font-weight: 900; font-size: 0.9rem; text-transform: uppercase; }
+        .room-label { font-size: 0.65rem; font-style: italic; font-weight: 700; color: #475569; }
         
-        .teacher-chip { display: inline-flex; background: #eee; border: 1px solid #000; border-radius: 3px; padding: 1px 3px; font-size: 0.65rem; font-weight: 800; margin: 1px; }
+        .teacher-chip { display: inline-flex; align-items: center; background: #fff; border: 1.5px solid #000; border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; font-weight: 800; margin: 1px; }
+        .remove-chip { cursor: pointer; margin-left: 4px; color: var(--danger); }
 
-        .btn { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+        .item { padding: 8px; margin: 4px 0; border-radius: 6px; cursor: grab; display: flex; align-items: center; border: 1px solid var(--border); background: var(--white); font-size: 0.75rem; font-weight: 800; }
+        .color-preview { width: 18px; height: 18px; border-radius: 4px; margin-right: 8px; border: 1px solid rgba(0,0,0,0.1); }
+        
+        .btn { border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
         .btn-success { background: var(--success); color: white; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(2px); }
+        .custom-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 15px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); z-index: 1001; display: none; text-align: center; border: 3px solid var(--primary); width: 320px; }
 
         @media print {
-            @page { size: A4 landscape; margin: 5mm; }
-            .no-print, .top-nav, .panel, .zoom-controls { display: none !important; }
-            #printArea { padding: 0; border: none; width: 100%; height: 100%; position: absolute; top:0; left:0; }
-            table { height: 95% !important; border: 2pt solid #000 !important; }
+            @page { size: A4 landscape; margin: 0; }
+            .no-print, .top-nav, .panel, .modal-overlay, .custom-modal { display: none !important; }
+            #printArea { padding: 5mm; border: none; width: 100%; height: 100vh; position: absolute; top:0; left:0; }
+            table { height: 90% !important; border: 2pt solid #000 !important; }
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="top-nav no-print">
-        <div class="nav-group">
-            <h2 style="margin:0; font-weight:900; color:var(--primary); font-size: 1.2rem;">Midtstuen</h2>
+    <div class="modal-overlay" id="modalOverlay"></div>
+    
+    <div id="roomModal" class="custom-modal">
+        <h2 id="modalSubjectTitle">Velg Rom</h2>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+            <button class="btn btn-success" style="background:var(--primary)" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
+            <button class="btn btn-success" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
+        </div>
+    </div>
+
+    <div id="editSubjectModal" class="custom-modal">
+        <h3 style="margin:0 0 15px 0">Rediger Fag</h3>
+        <input type="text" id="editSubName" style="width:100%; padding:8px; margin-bottom:10px;">
+        <input type="color" id="editSubColor" style="width:100%; height:35px; border:none; margin-bottom:10px;">
+        <label style="font-size:0.7rem; display:block; margin-bottom:15px;"><input type="checkbox" id="editSubNeedsRoom"> Krever romvalg</label>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-success" style="flex:1" onclick="saveSubjectEdit()">Lagre</button>
+            <button class="btn btn-outline" style="flex:1" onclick="closeModals()">Avbryt</button>
+        </div>
+    </div>
+
+    <div id="copyPrompt" style="position: fixed; z-index: 5000; background: var(--success); color: white; padding: 12px 20px; border-radius: 30px; font-size: 0.8rem; font-weight: 900; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 2px solid white; cursor: pointer;" onclick="confirmCopy()">Dobbelttime? Legg til her også ⬇️</div>
+
+    <div class="app-container">
+        <div class="top-nav no-print">
+            <div class="nav-group">
+                <h2 style="margin:0; font-weight:900; color:var(--primary); font-size:1.1rem;">Midtstuen</h2>
+                <select id="planSelector" onchange="switchPlan()"></select>
+                <button class="btn btn-outline" onclick="createNewPlan()">+ Ny</button>
+            </div>
+
             <div class="zoom-controls">
-                <span style="font-size: 0.7rem; font-weight: bold;">SKALA:</span>
                 <button class="zoom-btn" onclick="adjustZoom(-0.05)">−</button>
+                <span style="font-size:0.7rem; font-weight:900;">SKALA</span>
                 <button class="zoom-btn" onclick="adjustZoom(0.05)">+</button>
             </div>
-            <select id="planSelector" onchange="switchPlan()"></select>
-            <button class="btn btn-outline" onclick="createNewPlan()">+ Ny</button>
-        </div>
-        <div class="nav-group">
-            <button class="btn btn-outline" onclick="exportBackup()">💾 Lagre til Teams</button>
-            <button class="btn btn-outline" onclick="document.getElementById('importDb').click()">📂 Åpne fra Teams</button>
-            <input type="file" id="importDb" style="display:none" onchange="importBackup(this)">
-            <button class="btn btn-success" onclick="window.print()">🖨️ PDF</button>
-        </div>
-    </div>
 
-    <div class="main-grid">
-        <div class="panel no-print">
-            <h4 style="margin:0 0 10px 0;">📚 Fag</h4>
-            <div id="subjectsList" class="scroll-area"></div>
-        </div>
-
-        <div id="printArea">
-            <div class="fane-container">
-                <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" id="labelKlasse" contenteditable="true">9A</span></div>
-                <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" id="labelUke" contenteditable="true">1</span></div>
+            <div class="nav-group">
+                <button class="btn btn-outline" onclick="exportBackup()">💾 Lagre til Teams</button>
+                <button class="btn btn-outline" onclick="document.getElementById('importDb').click()">📂 Åpne fra Teams</button>
+                <input type="file" id="importDb" style="display:none" onchange="importBackup(this)">
+                <button class="btn btn-success" onclick="window.print()">🖨️ PDF</button>
             </div>
-            <table id="mainTable">
-                <thead><tr><th style="width: 80px;">TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
-                <tbody id="tableBody"></tbody>
-            </table>
         </div>
 
-        <div class="panel no-print">
-            <h4 style="margin:0 0 10px 0;">👤 Lærere</h4>
-            <div id="teachersList" class="scroll-area"></div>
+        <div class="main-grid">
+            <div class="panel no-print">
+                <h4 style="margin:0;">📚 Fag</h4>
+                <div style="display: flex; gap: 4px; margin-top:10px;">
+                    <input type="color" id="colInp" value="#bfdbfe" style="width:30px; height:30px; border:none; cursor:pointer;">
+                    <input type="text" id="subInp" placeholder="Navn..." style="flex-grow:1; padding:5px; border-radius:5px; border:1px solid var(--border);">
+                    <button class="btn btn-success" style="background:var(--primary)" onclick="addGlobalItem('subject')">+</button>
+                </div>
+                <div id="subjectsList" class="scroll-area"></div>
+            </div>
+
+            <div id="printArea">
+                <div class="fane-container">
+                    <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" id="labelKlasse" contenteditable="true" oninput="persistData()">9A</span></div>
+                    <div class="fane-box"><span class="fane-label">Kontaktlærer</span><span class="fane-content" id="labelLaerer" contenteditable="true" oninput="persistData()"></span></div>
+                    <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" id="labelUke" contenteditable="true" oninput="persistData()">1</span></div>
+                </div>
+                <table id="mainTable">
+                    <thead><tr><th style="width: 90px;">TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="panel no-print">
+                <h4 style="margin:0;">👤 Lærere</h4>
+                <div style="display: flex; gap: 4px; margin-top:10px;">
+                    <input type="text" id="teaInp" placeholder="Navn..." style="flex-grow:1; padding:5px; border-radius:5px; border:1px solid var(--border);">
+                    <button class="btn btn-success" style="background:var(--primary)" onclick="addGlobalItem('teacher')">+</button>
+                </div>
+                <button class="btn btn-outline" style="width:100%; font-size:0.6rem; margin:10px 0;" onclick="document.getElementById('excelInput').click()">📥 Import Excel (A+B)</button>
+                <input type="file" id="excelInput" style="display:none" onchange="handleExcelImport(this)">
+                <div id="teachersList" class="scroll-area"></div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    let zoomLevel = 1.0;
-    function adjustZoom(delta) {
-        zoomLevel += delta;
-        document.documentElement.style.setProperty('--base-font-size', (zoomLevel * 100) + '%');
-    }
+    <script>
+        // ZOOM FUNKSJON
+        let currentZoom = 1.0;
+        function adjustZoom(delta) {
+            currentZoom += delta;
+            document.documentElement.style.setProperty('--base-font-size', (currentZoom * 100) + '%');
+        }
 
-    const slots = ["08:30-09:15", "09:15-10:00", "10:15-11:00", "11:00-11:45", "12:15-13:00", "13:00-13:45", "14:00-14:45"];
-    let store = JSON.parse(localStorage.getItem('midtstuen_v27')) || { 
-        currentId: "9A", 
-        globalTeachers: ["Frode Andersen", "Petter Brun Andersen", "Kristoffer Berntsen"],
-        plans: { "9A": { klasse: "9A", uke: "1", cells: Array(35).fill().map(() => ({s:'', bg:'', t:[], r:''})) } } 
-    };
-
-    function init() {
-        renderLists();
-        renderPlanSelector();
-        loadPlan(store.currentId);
-    }
-
-    function loadPlan(id) {
-        store.currentId = id;
-        const p = store.plans[id];
-        document.getElementById('labelKlasse').innerText = p.klasse;
-        document.getElementById('labelUke').innerText = p.uke;
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = slots.map((t, rIdx) => `<tr><td class="time-cell">${t}</td>${[0,1,2,3,4].map(cIdx => {
-            const idx = rIdx*5+cIdx;
-            const c = p.cells[idx] || {s:'', bg:'', t:[], r:''};
-            return `<td class="dropzone" style="background:${c.bg}" ondragover="event.preventDefault()" ondrop="handleDrop(event, ${idx})">
-                <div class="subject-display">${c.s}</div>
-                <div class="teachers-container">${(c.t||[]).map(tName => `<span class="teacher-chip">${tName}</span>`).join('')}</div>
-            </td>`;
-        }).join('')}</tr>`).join('');
-    }
-
-    // Drag and Drop funksjonalitet...
-    function handleDrop(e, idx) {
-        // Logikk for å håndtere slipp av fag eller lærer
-    }
-
-    function exportBackup() {
-        const blob = new Blob([JSON.stringify(store)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Midtstuen_Plan_Data.json`;
-        a.click();
-    }
-
-    function importBackup(input) {
-        const r = new FileReader();
-        r.onload = e => { 
-            store = JSON.parse(e.target.result); 
-            localStorage.setItem('midtstuen_v27', JSON.stringify(store)); 
-            location.reload(); 
+        const slots = ["08:30-09:15", "09:15-10:00", "10:15-11:00", "11:00-11:45", "12:15-13:00", "13:00-13:45", "14:00-14:45"];
+        const hardcodedSubjects = [{n: "Norsk", c: "#fecaca", r: false}, {n: "Matte", c: "#bbf7d0", r: false}, {n: "Engelsk", c: "#bfdbfe", r: false}, {n: "Naturfag", c: "#ccfbf1", r: true}, {n: "Gym", c: "#e9d5ff", r: true}];
+        
+        let store = JSON.parse(localStorage.getItem('midtstuen_v28')) || { 
+            currentId: "9A", 
+            globalTeachers: ["Kristoffer Berntsen", "Frode Andersen"], 
+            globalSubjects: [...hardcodedSubjects], 
+            plans: { "9A": { klasse: "9A", laerer: "", uke: "1", cells: Array(35).fill().map(() => ({s:'', bg:'', t:[], r:''})) } } 
         };
-        r.readAsText(input.files[0]);
-    }
+        
+        let dragData = null, pendingRoomTarget = null, copyTarget = null, editingSubIdx = null;
 
-    function renderPlanSelector() {
-        document.getElementById('planSelector').innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id===store.currentId?'selected':''}>${id}</option>`).join('');
-    }
+        function init() { renderLists(); renderPlanSelector(); loadPlan(store.currentId); setupDragEvents(); }
 
-    function renderLists() {
-        // Rendrer lister over fag og lærere til sidepanelene
-    }
+        function isOccupied(type, name, idx, curId) {
+            for(let pId in store.plans) {
+                if(pId === curId) continue;
+                if(store.plans[pId].cells[idx]) {
+                    if(type === 'teacher' && store.plans[pId].cells[idx].t.includes(name)) return store.plans[pId].klasse;
+                    if(type === 'room' && store.plans[pId].cells[idx].r === name) return store.plans[pId].klasse;
+                }
+            }
+            return false;
+        }
 
-    window.onload = init;
-</script>
+        function setupDragEvents() {
+            document.addEventListener('dragstart', e => { 
+                const itm = e.target.closest('.item');
+                if(itm) dragData = { type: itm.dataset.type, text: itm.dataset.text, color: itm.dataset.color, needsRoom: itm.dataset.room === 'true' };
+            });
+            document.addEventListener('dragover', e => { if(e.target.closest('.dropzone')) e.preventDefault(); });
+            document.addEventListener('drop', e => {
+                const z = e.target.closest('.dropzone');
+                if(!z || !dragData) return;
+                const idx = z.dataset.idx;
+                const p = store.plans[store.currentId];
+
+                if(dragData.type === 'subject') {
+                    if(dragData.needsRoom) {
+                        pendingRoomTarget = z;
+                        document.getElementById('modalOverlay').style.display = 'block';
+                        document.getElementById('roomModal').style.display = 'block';
+                        document.getElementById('modalSubjectTitle').innerText = dragData.text;
+                    } else {
+                        p.cells[idx].s = dragData.text; p.cells[idx].bg = dragData.color; p.cells[idx].r = "";
+                    }
+                } else {
+                    const busy = isOccupied('teacher', dragData.text, idx, store.currentId);
+                    if(busy) alert(dragData.text + " er i klasse " + busy);
+                    else {
+                        if(!p.cells[idx].t.includes(dragData.text)) p.cells[idx].t.push(dragData.text);
+                        // Dobbelttime-sjekk
+                        const nextIdx = parseInt(idx) + 5;
+                        if(nextIdx < 35 && p.cells[idx].s === p.cells[nextIdx].s && p.cells[idx].s !== "") {
+                            const pr = document.getElementById('copyPrompt');
+                            pr.style.left = e.clientX + "px"; pr.style.top = e.clientY + "px"; pr.style.display = "block";
+                            copyTarget = { idx: nextIdx, name: dragData.text };
+                            setTimeout(() => pr.style.display = "none", 3000);
+                        }
+                    }
+                }
+                persistData(); loadPlan(store.currentId);
+            });
+        }
+
+        function applyRoomChoice(r) {
+            const idx = pendingRoomTarget.dataset.idx;
+            const busy = isOccupied('room', r, idx, store.currentId);
+            if(busy) { alert(r + " er opptatt av " + busy); return; }
+            store.plans[store.currentId].cells[idx].s = document.getElementById('modalSubjectTitle').innerText;
+            store.plans[store.currentId].cells[idx].bg = dragData.color;
+            store.plans[store.currentId].cells[idx].r = r;
+            closeModals(); persistData(); loadPlan(store.currentId);
+        }
+
+        function confirmCopy() {
+            if(copyTarget && !store.plans[store.currentId].cells[copyTarget.idx].t.includes(copyTarget.name)) {
+                store.plans[store.currentId].cells[copyTarget.idx].t.push(copyTarget.name);
+            }
+            document.getElementById('copyPrompt').style.display = "none";
+            persistData(); loadPlan(store.currentId);
+        }
+
+        function loadPlan(id) {
+            store.currentId = id; const p = store.plans[id];
+            document.getElementById('labelKlasse').innerText = p.klasse;
+            document.getElementById('labelLaerer').innerText = p.laerer;
+            document.getElementById('labelUke').innerText = p.uke;
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = slots.map((t, rIdx) => `<tr><td class="time-cell">${t}</td>${[0,1,2,3,4].map(cIdx => {
+                const idx = rIdx*5+cIdx;
+                const c = p.cells[idx] || {s:'', bg:'', t:[], r:''};
+                return `<td class="dropzone" style="background:${c.bg}" data-idx="${idx}">
+                    <div class="subject-display">${c.s}</div>
+                    <div class="room-label">${c.r||''}</div>
+                    <div class="teachers-container">${(c.t||[]).map(tn => `<span class="teacher-chip">${tn}<span class="remove-chip" onclick="removeTeacher(${idx},'${tn}')">✕</span></span>`).join('')}</div>
+                    ${c.s ? `<span class="remove-chip" style="position:absolute;top:2px;right:2px;" onclick="clearCell(${idx})">✕</span>`:''}
+                </td>`;
+            }).join('')}</tr>`).join('');
+        }
+
+        function renderLists() {
+            document.getElementById('subjectsList').innerHTML = store.globalSubjects.map((s, i) => `<div class="item" draggable="true" data-type="subject" data-text="${s.n}" data-color="${s.c}" data-room="${s.r}"><div class="color-preview" style="background:${s.c}"></div>${s.n}<span style="margin-left:auto; cursor:pointer;" onclick="openEditSubject(${i})">✎</span></div>`).join('');
+            document.getElementById('teachersList').innerHTML = store.globalTeachers.sort().map(t => `<div class="item" draggable="true" data-type="teacher" data-text="${t}">👤 ${t}</div>`).join('');
+        }
+
+        function openEditSubject(i) { editingSubIdx = i; const s = store.globalSubjects[i]; document.getElementById('editSubName').value = s.n; document.getElementById('editSubColor').value = s.c; document.getElementById('editSubNeedsRoom').checked = s.r; document.getElementById('modalOverlay').style.display='block'; document.getElementById('editSubjectModal').style.display='block'; }
+        function saveSubjectEdit() { store.globalSubjects[editingSubIdx] = { n: document.getElementById('editSubName').value, c: document.getElementById('editSubColor').value, r: document.getElementById('editSubNeedsRoom').checked }; closeModals(); renderLists(); persistData(); }
+        function closeModals() { document.getElementById('modalOverlay').style.display='none'; document.getElementById('roomModal').style.display='none'; document.getElementById('editSubjectModal').style.display='none'; }
+        function removeTeacher(idx, name) { store.plans[store.currentId].cells[idx].t = store.plans[store.currentId].cells[idx].t.filter(t => t !== name); persistData(); loadPlan(store.currentId); }
+        function clearCell(idx) { store.plans[store.currentId].cells[idx] = {s:'', bg:'', t:[], r:''}; persistData(); loadPlan(store.currentId); }
+        function persistData() { const p = store.plans[store.currentId]; p.klasse = document.getElementById('labelKlasse').innerText; p.laerer = document.getElementById('labelLaerer').innerText; p.uke = document.getElementById('labelUke').innerText; localStorage.setItem('midtstuen_v28', JSON.stringify(store)); }
+        function exportBackup() { persistData(); const b = new Blob([JSON.stringify(store)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Plan_Midtstuen.json`; a.click(); }
+        function importBackup(i) { const r = new FileReader(); r.onload = e => { store = JSON.parse(e.target.result); persistData(); location.reload(); }; r.readAsText(i.files[0]); }
+        function renderPlanSelector() { document.getElementById('planSelector').innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id===store.currentId?'selected':''}>${id}</option>`).join(''); }
+        function switchPlan() { persistData(); loadPlan(document.getElementById('planSelector').value); }
+        function createNewPlan() { const n = prompt("Klasse:"); if(n) { store.plans[n] = { klasse: n, laerer: "", uke: "1", cells: Array(35).fill().map(() => ({s:'', bg:'', t:[], r:''})) }; store.currentId = n; renderPlanSelector(); loadPlan(n); persistData(); } }
+        function addGlobalItem(type) { const inp = document.getElementById(type==='subject'?'subInp':'teaInp'); if(!inp.value) return; if(type==='teacher') store.globalTeachers.push(inp.value); else store.globalSubjects.push({n:inp.value, c:document.getElementById('colInp').value, r:false}); inp.value=""; renderLists(); persistData(); }
+        function handleExcelImport(i) { const r = new FileReader(); r.onload = e => { const d = new Uint8Array(e.target.result); const wb = XLSX.read(d, {type:'array'}); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); rows.forEach(row => { if(row[0] && row[1]) { const n = row[0].toString().trim() + " " + row[1].toString().trim(); if(!store.globalTeachers.includes(n)) store.globalTeachers.push(n); } }); renderLists(); persistData(); }; r.readAsArrayBuffer(i.files[0]); }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
