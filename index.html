@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Midtstuen skole - Ukeplan v30</title>
+    <title>Midtstuen skole - Ukeplan v31</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
@@ -27,7 +27,7 @@
             display: flex; align-items: center; gap: 10px; background: #f1f5f9; 
             padding: 5px 15px; border-radius: 30px; border: 1px solid var(--border);
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            z-index: 10;
+            z-index: 100;
         }
         .zoom-btn { 
             background: white; border: 1px solid var(--border); border-radius: 50%; 
@@ -45,11 +45,11 @@
         th, td { border: 2px solid #000 !important; text-align: center; vertical-align: middle; position: relative; }
         th { background: #f1f5f9; font-size: 0.8rem; font-weight: 900; height: 30px; }
 
-        .time-cell { width: 90px; font-size: 0.7rem; font-weight: bold; background: #f8fafc; outline: none; cursor: text; }
-        .pause-row { background: #e2e8f0 !important; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; color: #475569; height: 20px; }
+        .time-cell { width: 90px; font-size: 0.75rem; font-weight: bold; background: #f8fafc; outline: none; }
+        .pause-row { background: #e2e8f0 !important; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #475569; height: 25px; }
 
-        .subject-display { font-weight: 900; font-size: 0.9rem; text-transform: uppercase; }
-        .room-label { font-size: 0.65rem; font-style: italic; font-weight: 700; color: #475569; }
+        .subject-display { font-weight: 900; font-size: 0.9rem; text-transform: uppercase; line-height: 1.1; }
+        .room-label { font-size: 0.65rem; font-style: italic; font-weight: 700; color: #475569; display: block; }
         
         .teacher-chip { display: inline-flex; align-items: center; background: #fff; border: 1.5px solid #000; border-radius: 4px; padding: 1px 4px; font-size: 0.6rem; font-weight: 800; margin: 1px; }
         .remove-chip { cursor: pointer; margin-left: 4px; color: var(--danger); font-weight: 900; }
@@ -109,13 +109,18 @@
         <div class="main-grid">
             <div class="panel no-print">
                 <h4 style="margin:0;">📚 Fag</h4>
+                <div style="display: flex; gap: 5px; margin-top:10px;">
+                    <input type="color" id="colInp" value="#bfdbfe" style="width:30px; height:30px; border:none; cursor:pointer;">
+                    <input type="text" id="subInp" placeholder="Navn..." style="flex-grow:1; padding:5px; border-radius:5px; border:1px solid var(--border);">
+                    <button class="btn btn-success" style="background:var(--primary)" onclick="addGlobalItem('subject')">+</button>
+                </div>
                 <div id="subjectsList" class="scroll-area"></div>
             </div>
 
             <div id="printArea">
                 <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
-                    <div style="border:2px solid #000; padding:5px 10px; border-radius:8px; font-weight:900;">KLASSE: <span id="labelKlasse" contenteditable="true" oninput="persistData()">9A</span></div>
-                    <div style="border:2px solid #000; padding:5px 10px; border-radius:8px; font-weight:900;">UKE: <span id="labelUke" contenteditable="true" oninput="persistData()">1</span></div>
+                    <div style="border:2px solid #000; padding:5px 10px; border-radius:8px; font-weight:900;">KLASSE: <span id="labelKlasse" contenteditable="true" onblur="persistData()">9A</span></div>
+                    <div style="border:2px solid #000; padding:5px 10px; border-radius:8px; font-weight:900;">UKE: <span id="labelUke" contenteditable="true" onblur="persistData()">1</span></div>
                 </div>
                 <table id="mainTable">
                     <thead><tr><th style="width: 90px;">TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
@@ -125,6 +130,10 @@
 
             <div class="panel no-print">
                 <h4 style="margin:0;">👤 Lærere</h4>
+                <div style="display: flex; gap: 5px; margin-top:10px;">
+                    <input type="text" id="teaInp" placeholder="Navn..." style="flex-grow:1; padding:8px; border-radius:8px; border:1px solid var(--border);">
+                    <button class="btn btn-success" style="background:var(--primary)" onclick="addGlobalItem('teacher')">+</button>
+                </div>
                 <button class="btn btn-outline" style="width:100%; font-size:0.6rem; margin:10px 0;" onclick="document.getElementById('excelInput').click()">📥 Import Excel (A+B)</button>
                 <input type="file" id="excelInput" style="display:none" onchange="handleExcelImport(this)">
                 <div id="teachersList" class="scroll-area"></div>
@@ -139,24 +148,20 @@
             document.documentElement.style.setProperty('--base-font-size', (currentZoom * 100) + '%');
         }
 
-        // Definer strukturen: [Type, StandardTid, NavnOmPause]
         const scheduleStructure = [
-            ['lesson', '08:30-09:15'],
-            ['lesson', '09:15-10:00'],
+            ['lesson', '08:30-09:15'], ['lesson', '09:15-10:00'],
             ['pause', '10:00-10:15', 'Friminutt'],
-            ['lesson', '10:15-11:00'],
-            ['lesson', '11:00-11:45'],
+            ['lesson', '10:15-11:00'], ['lesson', '11:00-11:45'],
             ['pause', '11:45-12:15', 'Storefri'],
-            ['lesson', '12:15-13:00'],
-            ['lesson', '13:00-13:45'],
+            ['lesson', '12:15-13:00'], ['lesson', '13:00-13:45'],
             ['pause', '13:45-14:00', 'Friminutt'],
             ['lesson', '14:00-14:45']
         ];
 
-        let store = JSON.parse(localStorage.getItem('midtstuen_v30')) || { 
+        let store = JSON.parse(localStorage.getItem('midtstuen_v31')) || { 
             currentId: "9A", 
             globalTeachers: ["Frode Andersen", "Petter Brun Andersen"], 
-            globalSubjects: [{n: "Norsk", c: "#fecaca", r: false}, {n: "Matte", c: "#bbf7d0", r: false}, {n: "Gym", c: "#e9d5ff", r: true}, {n: "Naturfag", c: "#ccfbf1", r: true}], 
+            globalSubjects: [{n: "Norsk", c: "#fecaca", r: false}, {n: "Matte", c: "#bbf7d0", r: false}, {n: "Engelsk", c: "#bfdbfe", r: false}], 
             plans: { "9A": { klasse: "9A", uke: "1", times: scheduleStructure.map(s => s[1]), cells: Array(50).fill().map(() => ({s:'', bg:'', t:[], r:''})) } } 
         };
         
@@ -166,8 +171,6 @@
 
         function loadPlan(id) {
             store.currentId = id; const p = store.plans[id];
-            if(!p.times) p.times = scheduleStructure.map(s => s[1]); // Migrering
-            
             document.getElementById('labelKlasse').innerText = p.klasse;
             document.getElementById('labelUke').innerText = p.uke;
             
@@ -177,10 +180,10 @@
             scheduleStructure.forEach((row, rowIdx) => {
                 const time = p.times[rowIdx] || row[1];
                 if(row[0] === 'pause') {
-                    html += `<tr class="pause-row"><td contenteditable="true" class="time-cell" oninput="updateTime(${rowIdx}, this.innerText)">${time}</td><td colspan="5">${row[2]}</td></tr>`;
+                    html += `<tr class="pause-row"><td contenteditable="true" class="time-cell" onblur="updateTime(${rowIdx}, this.innerText)">${time}</td><td colspan="5">${row[2]}</td></tr>`;
                     cellIdx += 5;
                 } else {
-                    html += `<tr><td contenteditable="true" class="time-cell" oninput="updateTime(${rowIdx}, this.innerText)">${time}</td>`;
+                    html += `<tr><td contenteditable="true" class="time-cell" onblur="updateTime(${rowIdx}, this.innerText)">${time}</td>`;
                     for(let i=0; i<5; i++) {
                         const c = p.cells[cellIdx] || {s:'', bg:'', t:[], r:''};
                         html += `<td class="dropzone" style="background:${c.bg}" data-idx="${cellIdx}">
@@ -246,7 +249,7 @@
             const p = store.plans[store.currentId];
             p.klasse = document.getElementById('labelKlasse').innerText;
             p.uke = document.getElementById('labelUke').innerText;
-            localStorage.setItem('midtstuen_v30', JSON.stringify(store)); 
+            localStorage.setItem('midtstuen_v31', JSON.stringify(store)); 
         }
 
         function removeTeacher(idx, name) { store.plans[store.currentId].cells[idx].t = store.plans[store.currentId].cells[idx].t.filter(t => t !== name); persistData(); loadPlan(store.currentId); }
@@ -256,6 +259,7 @@
         function createNewPlan() { const n = prompt("Klasse:"); if(n) { store.plans[n] = { klasse: n, uke: "1", times: scheduleStructure.map(s => s[1]), cells: Array(50).fill().map(() => ({s:'', bg:'', t:[], r:''})) }; store.currentId = n; renderPlanSelector(); loadPlan(n); persistData(); } }
         function exportBackup() { persistData(); const b = new Blob([JSON.stringify(store)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Plan_Midtstuen.json`; a.click(); }
         function importBackup(i) { const r = new FileReader(); r.onload = e => { store = JSON.parse(e.target.result); persistData(); location.reload(); }; r.readAsText(i.files[0]); }
+        function addGlobalItem(type) { const inp = document.getElementById(type==='subject'?'subInp':'teaInp'); if(!inp.value) return; if(type==='teacher') store.globalTeachers.push(inp.value); else store.globalSubjects.push({n:inp.value, c:document.getElementById('colInp').value, r:false}); inp.value=""; renderLists(); persistData(); }
         function handleExcelImport(i) { const r = new FileReader(); r.onload = e => { const d = new Uint8Array(e.target.result); const wb = XLSX.read(d, {type:'array'}); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); rows.forEach(row => { if(row[0] && row[1]) { const n = row[0].toString().trim() + " " + row[1].toString().trim(); if(!store.globalTeachers.includes(n)) store.globalTeachers.push(n); } }); renderLists(); persistData(); }; r.readAsArrayBuffer(i.files[0]); }
 
         window.onload = init;
