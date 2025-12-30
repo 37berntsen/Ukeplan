@@ -3,121 +3,82 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Midtstuen skole - Profesjonell Ukeplan v32</title>
+    <title>Midtstuen skole - Ukeplan v33</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
-            --primary: #2563eb; --primary-hover: #1d4ed8; --bg: #f1f5f9; --text: #0f172a;
-            --danger: #ef4444; --success: #22c55e; --white: #ffffff; --border: #e2e8f0;
+            --primary: #2563eb; --bg: #f1f5f9; --text: #0f172a;
+            --danger: #ef4444; --success: #22c55e; --white: #ffffff; --border: #cbd5e1;
             --base-font-size: 100%; 
         }
         body, html { 
-            height: 100vh; margin: 0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            height: 100vh; margin: 0; font-family: 'Inter', system-ui, sans-serif;
             background: var(--bg); color: var(--text); overflow: hidden; 
             font-size: var(--base-font-size);
         }
-        .app-container { display: flex; flex-direction: column; height: 100vh; padding: 12px; box-sizing: border-box; gap: 12px; }
+        .app-container { display: flex; flex-direction: column; height: 100vh; padding: 12px; box-sizing: border-box; gap: 10px; }
         
-        /* Profesjonell Toppmeny */
+        /* Horisontal og ryddig toppmeny */
         .top-nav { 
-            background: var(--white); padding: 0 24px; border-radius: 12px; 
+            background: var(--white); padding: 0 20px; border-radius: 12px; 
             display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border);
-            position: relative; min-height: 64px; flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border);
+            min-height: 60px; flex-shrink: 0;
         }
-        .nav-group { display: flex; gap: 12px; align-items: center; z-index: 10; }
+        .nav-group { display: flex; gap: 10px; align-items: center; }
         
-        /* Symmetrisk Zoom-kontroll */
         .zoom-controls { 
-            display: flex; align-items: center; gap: 12px; background: #f8fafc; 
-            padding: 6px 16px; border-radius: 99px; border: 1px solid var(--border);
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            z-index: 5;
+            display: flex; align-items: center; gap: 8px; background: #f8fafc; 
+            padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border);
         }
         .zoom-btn { 
             background: var(--white); border: 1px solid var(--border); border-radius: 50%; 
-            width: 32px; height: 32px; cursor: pointer; font-weight: 700; 
-            font-size: 1.1rem; display: flex; align-items: center; justify-content: center; 
-            transition: all 0.2s ease; color: var(--primary);
+            width: 28px; height: 28px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; 
         }
-        .zoom-btn:hover { background: var(--primary); color: var(--white); border-color: var(--primary); }
 
-        .main-grid { display: grid; grid-template-columns: 260px 1fr 260px; gap: 12px; flex-grow: 1; min-height: 0; }
-        .panel { background: var(--white); padding: 16px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .scroll-area { flex-grow: 1; overflow-y: auto; margin-top: 12px; padding-right: 4px; }
+        .main-grid { display: grid; grid-template-columns: 260px 1fr 260px; gap: 10px; flex-grow: 1; min-height: 0; }
+        .panel { background: var(--white); padding: 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+        .scroll-area { flex-grow: 1; overflow-y: auto; margin-top: 8px; }
 
-        /* Timeplan-område */
-        #printArea { 
-            background: var(--white); padding: 20px; border-radius: 12px; 
-            display: flex; flex-direction: column; height: 100%; box-sizing: border-box; 
-            border: 1px solid var(--border); position: relative; overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+        #printArea { background: var(--white); padding: 15px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; border: 1px solid var(--border); position: relative; }
         
-        .header-inputs { display: flex; justify-content: center; gap: 16px; margin-bottom: 16px; }
-        .header-box { 
-            background: #f8fafc; border: 2px solid var(--text); padding: 6px 16px; 
-            border-radius: 8px; text-align: center; min-width: 140px; 
-        }
-        .header-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; display: block; margin-bottom: 2px; }
-        .header-val { font-weight: 800; font-size: 1.1rem; outline: none; border-bottom: 1px solid transparent; transition: border 0.2s; }
-        .header-val:focus { border-color: var(--primary); }
+        /* Faner */
+        .tab-nav { display: flex; justify-content: center; margin-bottom: 10px; border-bottom: 2px solid #000; }
+        .tab { padding: 6px 20px; cursor: pointer; font-weight: 800; border: 2px solid #000; border-bottom: none; border-radius: 8px 8px 0 0; background: #e2e8f0; margin: 0 2px; font-size: 0.8rem; }
+        .tab.active { background: var(--white); border-bottom: 2px solid var(--white); margin-bottom: -2px; }
 
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid var(--text); flex-grow: 1; }
-        th, td { border: 1px solid var(--text) !important; text-align: center; vertical-align: middle; position: relative; padding: 4px; }
-        th { background: #f8fafc; font-size: 0.8rem; font-weight: 800; height: 32px; text-transform: uppercase; }
+        .header-inputs { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .header-box { border: 2px solid #000; padding: 4px 12px; border-radius: 8px; text-align: center; background: #f8fafc; }
+        .header-label { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; display: block; }
+        .header-val { font-weight: 900; font-size: 1rem; outline: none; }
 
-        .time-cell { width: 85px; font-size: 0.75rem; font-weight: 700; background: #f8fafc; outline: none; transition: background 0.2s; }
-        .time-cell:focus { background: #eff6ff; }
-        .pause-row { background: #f1f5f9 !important; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #475569; height: 24px; letter-spacing: 0.1em; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 3px solid #000; flex-grow: 1; }
+        th, td { border: 2px solid #000 !important; text-align: center; vertical-align: middle; position: relative; padding: 2px; }
+        th { background: #f1f5f9; font-size: 0.75rem; font-weight: 900; height: 28px; }
 
-        .dropzone { transition: background 0.2s ease; }
-        .subject-display { font-weight: 900; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 2px; }
-        .room-label { font-size: 0.65rem; font-style: italic; font-weight: 700; color: #64748b; }
+        .time-cell { width: 85px; font-size: 0.7rem; font-weight: 800; background: #f8fafc; outline: none; }
+        .pause-row { background: #cbd5e1 !important; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; height: 22px; }
+
+        .subject-display { font-weight: 900; font-size: 0.85rem; text-transform: uppercase; }
+        .room-label { font-size: 0.65rem; font-style: italic; font-weight: 700; color: #475569; }
         
-        .teachers-container { margin-top: 4px; display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
-        .teacher-chip { 
-            display: inline-flex; align-items: center; background: var(--white); 
-            border: 1px solid var(--text); border-radius: 4px; padding: 1px 6px; 
-            font-size: 0.65rem; font-weight: 700;
-        }
-        .remove-chip { cursor: pointer; margin-left: 5px; font-weight: 900; color: var(--danger); }
+        .teacher-chip { display: inline-flex; align-items: center; background: #fff; border: 1.5px solid #000; border-radius: 4px; padding: 0 4px; font-size: 0.6rem; font-weight: 800; margin: 1px; }
+        .remove-chip { cursor: pointer; margin-left: 3px; color: var(--danger); font-weight: 900; }
 
-        /* UI Elementer */
-        .item { 
-            padding: 10px; margin: 6px 0; border-radius: 8px; cursor: grab; 
-            border: 1px solid var(--border); background: var(--white); 
-            font-size: 0.8rem; font-weight: 700; display: flex; align-items: center;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        .item:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-color: var(--primary); }
-        .color-preview { width: 18px; height: 18px; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1); }
+        .item { padding: 8px; margin: 4px 0; border-radius: 6px; cursor: grab; border: 1px solid var(--border); background: var(--white); font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; }
+        .color-preview { width: 16px; height: 16px; border-radius: 4px; margin-right: 8px; border: 1px solid rgba(0,0,0,0.1); }
         
-        .btn { 
-            border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; 
-            font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;
-            transition: all 0.2s;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
+        .btn { border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.75rem; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
         .btn-success { background: var(--success); color: white; }
         .btn-outline { background: var(--white); border: 1px solid var(--border); color: var(--text); }
-        .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); z-index: 10000; display: none; backdrop-filter: blur(4px); }
-        .custom-modal { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: white; padding: 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
-            z-index: 10001; display: none; width: 320px; text-align: center; border: 1px solid var(--border);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; }
+        .custom-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 12px; z-index: 10001; display: none; width: 280px; text-align: center; border: 3px solid var(--primary); }
 
         @media print {
-            @page { size: A4 landscape; margin: 0; }
             .no-print { display: none !important; }
-            body { background: white; }
-            .app-container { padding: 0; }
-            #printArea { padding: 10mm; border: none; width: 100%; height: 100vh; position: absolute; top:0; left:0; border-radius: 0; box-shadow: none; }
-            table { height: 90% !important; border: 2pt solid black !important; }
+            #printArea { padding: 0; border: none; position: absolute; top:0; left:0; width: 100%; height: 100%; }
+            table { height: 95% !important; border: 3pt solid #000 !important; }
         }
     </style>
 </head>
@@ -125,68 +86,76 @@
 
     <div class="modal-overlay" id="modalOverlay"></div>
     <div id="roomModal" class="custom-modal">
-        <h3 id="modalSubjectTitle" style="margin-top:0;">Velg Rom</h3>
-        <p style="color: #64748b; font-size: 0.9rem;">Hvor skal denne timen holdes?</p>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-            <button class="btn btn-primary" style="justify-content:center" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
+        <h3 id="modalSubjectTitle" style="margin:0">Romvalg</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+            <button class="btn btn-success" style="background:var(--primary); justify-content:center" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
             <button class="btn btn-outline" style="justify-content:center" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
         </div>
     </div>
 
-    <div id="copyPrompt" style="position: fixed; z-index: 5000; background: var(--primary); color: white; padding: 10px 20px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); cursor: pointer;" onclick="confirmCopy()">Doble timen? Klikk for å kopiere ⬇️</div>
+    <div id="copyPrompt" style="position: fixed; z-index: 5000; background: var(--primary); color: white; padding: 8px 16px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;" onclick="confirmCopy()">Doble timen? Klikk her ⬇️</div>
 
     <div class="app-container">
         <header class="top-nav no-print">
             <div class="nav-group">
-                <span style="font-weight: 900; font-size: 1.4rem; color: var(--primary); letter-spacing: -0.02em;">Midtstuen</span>
-                <select id="planSelector" onchange="switchPlan()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font-weight: 600;"></select>
+                <span style="font-weight: 900; font-size: 1.2rem; color: var(--primary);">Midtstuen</span>
+                <select id="planSelector" onchange="switchPlan()" style="padding: 4px; border-radius: 4px;"></select>
                 <button class="btn btn-outline" onclick="createNewPlan()" title="Ny klasse">+</button>
             </div>
 
             <div class="zoom-controls">
-                <button class="zoom-btn" onclick="adjustZoom(-0.05)" title="Mindre">−</button>
-                <span style="font-size:0.65rem; font-weight:800; color: #64748b; text-transform: uppercase;">Skala</span>
-                <button class="zoom-btn" onclick="adjustZoom(0.05)" title="Større">+</button>
+                <button class="zoom-btn" onclick="adjustZoom(-0.05)">−</button>
+                <span style="font-size:0.6rem; font-weight:800; color: #64748b;">SKALA</span>
+                <button class="zoom-btn" onclick="adjustZoom(0.05)">+</button>
             </div>
 
             <div class="nav-group">
-                <button class="btn btn-outline" onclick="exportBackup()">💾 Lagre</button>
-                <button class="btn btn-outline" onclick="document.getElementById('importDb').click()">📂 Åpne</button>
+                <button class="btn btn-outline" onclick="exportBackup()">💾 Lagre til Teams</button>
+                <button class="btn btn-outline" onclick="document.getElementById('importDb').click()">📂 Åpne fra Teams</button>
                 <input type="file" id="importDb" style="display:none" onchange="importBackup(this)">
-                <button class="btn btn-success" onclick="window.print()">🖨️ Lag PDF</button>
+                <button class="btn btn-success" onclick="window.print()">🖨️ PDF</button>
             </div>
         </header>
 
         <main class="main-grid">
             <aside class="panel no-print">
-                <h4 style="margin:0; font-size: 0.9rem; font-weight: 800; color: #64748b; text-transform: uppercase;">📚 Fag</h4>
-                <div style="display: flex; gap: 6px; margin-top:12px;">
-                    <input type="color" id="colInp" value="#bfdbfe" style="width:32px; height:32px; border:none; cursor:pointer; background:none;">
-                    <input type="text" id="subInp" placeholder="Nytt fag..." style="flex-grow:1; padding:6px 10px; border-radius:6px; border:1px solid var(--border); font-size: 0.8rem;">
-                    <button class="btn btn-primary" onclick="addGlobalItem('subject')" style="padding: 0 12px;">+</button>
+                <h4 style="margin:0; font-size:0.8rem">📚 Fag</h4>
+                <div style="display: flex; gap: 4px; margin-top:8px;">
+                    <input type="color" id="colInp" value="#bfdbfe" style="width:28px; height:28px; border:none; cursor:pointer;">
+                    <input type="text" id="subInp" placeholder="Fag..." style="flex-grow:1; padding:4px; border-radius:4px; border:1px solid var(--border); font-size: 0.75rem;">
+                    <button class="btn btn-outline" onclick="addGlobalItem('subject')">+</button>
                 </div>
                 <div id="subjectsList" class="scroll-area"></div>
             </aside>
 
             <section id="printArea">
+                <div class="tab-nav no-print">
+                    <div class="tab active" id="tabClass" onclick="setTab('class')">KLASSE</div>
+                    <div class="tab" id="tabTeacher" onclick="setTab('teacher')">LÆRER</div>
+                </div>
+
                 <div class="header-inputs">
                     <div class="header-box"><span class="header-label">Klasse</span><span class="header-val" id="labelKlasse" contenteditable="true" onblur="persistData()">9A</span></div>
-                    <div class="header-box"><span class="header-label">Kontaktlærer</span><span class="header-val" id="labelLaerer" contenteditable="true" onblur="persistData()"></span></div>
+                    <div class="header-box" id="laererBox">
+                        <span class="header-label" id="laererLabel">Kontaktlærer</span>
+                        <span class="header-val" id="labelLaerer" contenteditable="true" onblur="persistData()"></span>
+                        <select id="teacherViewSelector" onchange="renderTeacherSchedule()" style="display:none; border:none; background:transparent; font-weight:900; font-size:1rem;"></select>
+                    </div>
                     <div class="header-box"><span class="header-label">Uke</span><span class="header-val" id="labelUke" contenteditable="true" onblur="persistData()">1</span></div>
                 </div>
                 <table id="mainTable">
-                    <thead><tr><th style="width: 85px;">TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
+                    <thead><tr><th style="width: 85px;">TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
                     <tbody id="tableBody"></tbody>
                 </table>
             </section>
 
             <aside class="panel no-print">
-                <h4 style="margin:0; font-size: 0.9rem; font-weight: 800; color: #64748b; text-transform: uppercase;">👤 Lærere</h4>
-                <div style="display: flex; gap: 6px; margin-top:12px;">
-                    <input type="text" id="teaInp" placeholder="Navn..." style="flex-grow:1; padding:6px 10px; border-radius:6px; border:1px solid var(--border); font-size: 0.8rem;">
-                    <button class="btn btn-primary" onclick="addGlobalItem('teacher')" style="padding: 0 12px;">+</button>
+                <h4 style="margin:0; font-size:0.8rem">👤 Lærere</h4>
+                <div style="display: flex; gap: 4px; margin-top:8px;">
+                    <input type="text" id="teaInp" placeholder="Navn..." style="flex-grow:1; padding:4px; border-radius:4px; border:1px solid var(--border); font-size: 0.75rem;">
+                    <button class="btn btn-outline" onclick="addGlobalItem('teacher')">+</button>
                 </div>
-                <button class="btn btn-outline" style="width:100%; font-size:0.65rem; margin-top: 12px; justify-content: center;" onclick="document.getElementById('excelInput').click()">📥 Import Excel (A+B)</button>
+                <button class="btn btn-outline" style="width:100%; font-size:0.6rem; margin-top: 8px;" onclick="document.getElementById('excelInput').click()">📥 Import Excel</button>
                 <input type="file" id="excelInput" style="display:none" onchange="handleExcelImport(this)">
                 <div id="teachersList" class="scroll-area"></div>
             </aside>
@@ -195,10 +164,8 @@
 
     <script>
         let currentZoom = 1.0;
-        function adjustZoom(delta) {
-            currentZoom = Math.min(Math.max(0.5, currentZoom + delta), 1.5);
-            document.documentElement.style.setProperty('--base-font-size', (currentZoom * 100) + '%');
-        }
+        let currentTab = 'class';
+        function adjustZoom(delta) { currentZoom += delta; document.documentElement.style.setProperty('--base-font-size', (currentZoom * 100) + '%'); }
 
         const structure = [
             ['lesson', '08:30-09:15'], ['lesson', '09:15-10:00'],
@@ -210,10 +177,10 @@
             ['lesson', '14:00-14:45']
         ];
 
-        let store = JSON.parse(localStorage.getItem('midtstuen_v32')) || { 
+        let store = JSON.parse(localStorage.getItem('midtstuen_v33')) || { 
             currentId: "9A", 
             globalTeachers: ["Frode Andersen", "Petter Brun Andersen"], 
-            globalSubjects: [{n: "Norsk", c: "#fee2e2", r: false}, {n: "Matte", c: "#dcfce7", r: false}, {n: "Engelsk", c: "#dbeafe", r: false}], 
+            globalSubjects: [{n: "Norsk", c: "#fee2e2", r: false}, {n: "Matte", c: "#dcfce7", r: false}], 
             plans: { "9A": { klasse: "9A", uke: "1", laerer: "", times: structure.map(s => s[1]), cells: Array(50).fill().map(() => ({s:'', bg:'', t:[], r:''})) } } 
         };
         
@@ -221,27 +188,46 @@
 
         function init() { renderLists(); renderPlanSelector(); loadPlan(store.currentId); setupDragEvents(); }
 
+        function setTab(type) {
+            currentTab = type;
+            document.getElementById('tabClass').classList.toggle('active', type === 'class');
+            document.getElementById('tabTeacher').classList.toggle('active', type === 'teacher');
+            document.getElementById('laererLabel').innerText = type === 'class' ? 'Kontaktlærer' : 'Velg Lærer';
+            document.getElementById('labelLaerer').style.display = type === 'class' ? 'inline-block' : 'none';
+            document.getElementById('teacherViewSelector').style.display = type === 'teacher' ? 'inline-block' : 'none';
+            if(type === 'class') loadPlan(store.currentId);
+            else { populateTeacherSelector(); renderTeacherSchedule(); }
+        }
+
+        function populateTeacherSelector() {
+            const sel = document.getElementById('teacherViewSelector');
+            sel.innerHTML = store.globalTeachers.sort().map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
         function loadPlan(id) {
             store.currentId = id; const p = store.plans[id];
             document.getElementById('labelKlasse').innerText = p.klasse;
             document.getElementById('labelLaerer').innerText = p.laerer || "";
             document.getElementById('labelUke').innerText = p.uke;
-            
+            renderTable(p.cells, p.times);
+        }
+
+        function renderTable(cells, times) {
             let html = ""; let cellIdx = 0;
             structure.forEach((row, rowIdx) => {
-                const time = p.times[rowIdx] || row[1];
+                const time = times[rowIdx] || row[1];
                 if(row[0] === 'pause') {
                     html += `<tr class="pause-row"><td contenteditable="true" class="time-cell" onblur="updateTime(${rowIdx}, this.innerText)">${time}</td><td colspan="5">${row[2]}</td></tr>`;
                     cellIdx += 5;
                 } else {
                     html += `<tr><td contenteditable="true" class="time-cell" onblur="updateTime(${rowIdx}, this.innerText)">${time}</td>`;
                     for(let i=0; i<5; i++) {
-                        const c = p.cells[cellIdx] || {s:'', bg:'', t:[], r:''};
+                        const c = cells[cellIdx] || {s:'', bg:'', t:[], r:''};
                         html += `<td class="dropzone" style="background:${c.bg}" data-idx="${cellIdx}">
                             <div class="subject-display">${c.s}</div>
                             <div class="room-label">${c.r||''}</div>
-                            <div class="teachers-container">${(c.t||[]).map(tn => `<span class="teacher-chip">${tn}<span class="remove-chip" onclick="removeTeacher(${cellIdx},'${tn}')">✕</span></span>`).join('')}</div>
-                            ${c.s ? `<span class="remove-chip" style="position:absolute;top:2px;right:2px;font-size:10px;" onclick="clearCell(${cellIdx})">✕</span>`:''}
+                            <div class="teachers">${(c.t||[]).map(tn => `<span class="teacher-chip">${tn}${currentTab==='class'?`<span class="remove-chip" onclick="removeTeacher(${cellIdx},'${tn}')">✕</span>`:''}</span>`).join('')}</div>
+                            ${c.s && currentTab==='class' ? `<span class="remove-chip" style="position:absolute;top:2px;right:2px;font-size:10px;" onclick="clearCell(${cellIdx})">✕</span>`:''}
                         </td>`;
                         cellIdx++;
                     }
@@ -251,29 +237,52 @@
             document.getElementById('tableBody').innerHTML = html;
         }
 
-        function updateTime(rowIdx, val) { store.plans[store.currentId].times[rowIdx] = val; persistData(); }
+        function renderTeacherSchedule() {
+            const name = document.getElementById('teacherViewSelector').value;
+            const tCells = Array(50).fill().map(() => ({s:'', bg:'', t:[], r:''}));
+            for(let pId in store.plans) {
+                store.plans[pId].cells.forEach((c, idx) => {
+                    if(c.t.includes(name)) {
+                        tCells[idx] = {s: c.s, bg: c.bg, t: [store.plans[pId].klasse], r: c.r};
+                    }
+                });
+            }
+            renderTable(tCells, structure.map(s => s[1]));
+        }
+
+        function handleExcelImport(i) {
+            const r = new FileReader();
+            r.onload = e => {
+                const d = new Uint8Array(e.target.result);
+                const wb = XLSX.read(d, {type:'array'});
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+                rows.forEach(row => {
+                    if(row[0] && row[1]) {
+                        // SNUR REKKEFØLGEN: Kolonne B (Fornavn) + Kolonne A (Etternavn)
+                        const fullName = row[1].toString().trim() + " " + row[0].toString().trim();
+                        if(!store.globalTeachers.includes(fullName)) store.globalTeachers.push(fullName);
+                    }
+                });
+                renderLists(); persistData();
+            };
+            r.readAsArrayBuffer(i.files[0]);
+        }
 
         function setupDragEvents() {
             document.addEventListener('dragstart', e => { 
                 const itm = e.target.closest('.item');
                 if(itm) dragData = { type: itm.dataset.type, text: itm.dataset.text, color: itm.dataset.color, needsRoom: itm.dataset.room === 'true' };
             });
-            document.addEventListener('dragover', e => { if(e.target.closest('.dropzone')) e.preventDefault(); });
+            document.addEventListener('dragover', e => { if(e.target.closest('.dropzone') && currentTab === 'class') e.preventDefault(); });
             document.addEventListener('drop', e => {
                 const z = e.target.closest('.dropzone');
-                if(!z || !dragData) return;
+                if(!z || !dragData || currentTab !== 'class') return;
                 const idx = parseInt(z.dataset.idx);
                 const p = store.plans[store.currentId];
-
                 if(dragData.type === 'subject') {
                     if(dragData.needsRoom) {
-                        pendingRoomTarget = z;
-                        document.getElementById('modalOverlay').style.display = 'block';
-                        document.getElementById('roomModal').style.display = 'block';
-                        document.getElementById('modalSubjectTitle').innerText = dragData.text;
-                    } else {
-                        p.cells[idx].s = dragData.text; p.cells[idx].bg = dragData.color; p.cells[idx].r = "";
-                    }
+                        pendingRoomTarget = z; document.getElementById('modalOverlay').style.display = 'block'; document.getElementById('roomModal').style.display = 'block'; document.getElementById('modalSubjectTitle').innerText = dragData.text;
+                    } else { p.cells[idx].s = dragData.text; p.cells[idx].bg = dragData.color; p.cells[idx].r = ""; }
                 } else {
                     if(!p.cells[idx].t.includes(dragData.text)) p.cells[idx].t.push(dragData.text);
                     const nextIdx = idx + 5;
@@ -281,55 +290,26 @@
                         const cp = document.getElementById('copyPrompt');
                         cp.style.left = e.clientX + "px"; cp.style.top = e.clientY + "px"; cp.style.display = "block";
                         copyTarget = { idx: nextIdx, name: dragData.text };
-                        setTimeout(() => cp.style.display = "none", 4000);
+                        setTimeout(() => cp.style.display = "none", 3000);
                     }
                 }
                 persistData(); loadPlan(store.currentId);
             });
         }
 
-        function applyRoomChoice(r) {
-            const idx = pendingRoomTarget.dataset.idx;
-            store.plans[store.currentId].cells[idx].s = document.getElementById('modalSubjectTitle').innerText;
-            store.plans[store.currentId].cells[idx].bg = dragData.color;
-            store.plans[store.currentId].cells[idx].r = r;
-            closeModals(); persistData(); loadPlan(store.currentId);
-        }
-
-        function confirmCopy() {
-            if(copyTarget) {
-                if(!store.plans[store.currentId].cells[copyTarget.idx].t.includes(copyTarget.name)) {
-                    store.plans[store.currentId].cells[copyTarget.idx].t.push(copyTarget.name);
-                }
-                document.getElementById('copyPrompt').style.display = "none";
-                persistData(); loadPlan(store.currentId);
-            }
-        }
-
-        function renderLists() {
-            document.getElementById('subjectsList').innerHTML = store.globalSubjects.map(s => `<div class="item" draggable="true" data-type="subject" data-text="${s.n}" data-color="${s.c}" data-room="${s.r}"><div class="color-preview" style="background:${s.c}"></div>${s.n}</div>`).join('');
-            document.getElementById('teachersList').innerHTML = store.globalTeachers.sort().map(t => `<div class="item" draggable="true" data-type="teacher" data-text="${t}">👤 ${t}</div>`).join('');
-        }
-
-        function persistData() { 
-            const p = store.plans[store.currentId];
-            p.klasse = document.getElementById('labelKlasse').innerText;
-            p.laerer = document.getElementById('labelLaerer').innerText;
-            p.uke = document.getElementById('labelUke').innerText;
-            localStorage.setItem('midtstuen_v32', JSON.stringify(store)); 
-        }
-
-        function closeModals() { document.getElementById('modalOverlay').style.display = 'none'; document.getElementById('roomModal').style.display = 'none'; }
+        function updateTime(rowIdx, val) { store.plans[store.currentId].times[rowIdx] = val; persistData(); }
+        function applyRoomChoice(r) { const idx = pendingRoomTarget.dataset.idx; store.plans[store.currentId].cells[idx].s = document.getElementById('modalSubjectTitle').innerText; store.plans[store.currentId].cells[idx].bg = dragData.color; store.plans[store.currentId].cells[idx].r = r; document.getElementById('modalOverlay').style.display = 'none'; document.getElementById('roomModal').style.display = 'none'; persistData(); loadPlan(store.currentId); }
+        function confirmCopy() { if(copyTarget) { if(!store.plans[store.currentId].cells[copyTarget.idx].t.includes(copyTarget.name)) store.plans[store.currentId].cells[copyTarget.idx].t.push(copyTarget.name); } document.getElementById('copyPrompt').style.display = "none"; persistData(); loadPlan(store.currentId); }
+        function renderLists() { document.getElementById('subjectsList').innerHTML = store.globalSubjects.map(s => `<div class="item" draggable="true" data-type="subject" data-text="${s.n}" data-color="${s.c}" data-room="${s.r}"><div class="color-preview" style="background:${s.c}"></div>${s.n}</div>`).join(''); document.getElementById('teachersList').innerHTML = store.globalTeachers.sort().map(t => `<div class="item" draggable="true" data-type="teacher" data-text="${t}">👤 ${t}</div>`).join(''); }
+        function persistData() { const p = store.plans[store.currentId]; p.klasse = document.getElementById('labelKlasse').innerText; p.laerer = document.getElementById('labelLaerer').innerText; p.uke = document.getElementById('labelUke').innerText; localStorage.setItem('midtstuen_v33', JSON.stringify(store)); }
         function removeTeacher(idx, name) { store.plans[store.currentId].cells[idx].t = store.plans[store.currentId].cells[idx].t.filter(t => t !== name); persistData(); loadPlan(store.currentId); }
         function clearCell(idx) { store.plans[store.currentId].cells[idx] = {s:'', bg:'', t:[], r:''}; persistData(); loadPlan(store.currentId); }
         function renderPlanSelector() { document.getElementById('planSelector').innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id===store.currentId?'selected':''}>${id}</option>`).join(''); }
         function switchPlan() { persistData(); loadPlan(document.getElementById('planSelector').value); }
-        function createNewPlan() { const n = prompt("Navn på ny klasse/plan:"); if(n) { store.plans[n] = { klasse: n, uke: "1", times: structure.map(s => s[1]), cells: Array(50).fill().map(() => ({s:'', bg:'', t:[], r:''})) }; store.currentId = n; renderPlanSelector(); loadPlan(n); persistData(); } }
-        function exportBackup() { persistData(); const b = new Blob([JSON.stringify(store)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Ukeplan_Eksport.json`; a.click(); }
+        function createNewPlan() { const n = prompt("Klasse:"); if(n) { store.plans[n] = { klasse: n, uke: "1", times: structure.map(s => s[1]), cells: Array(50).fill().map(() => ({s:'', bg:'', t:[], r:''})) }; store.currentId = n; renderPlanSelector(); loadPlan(n); persistData(); } }
+        function exportBackup() { persistData(); const b = new Blob([JSON.stringify(store)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Plan_Midtstuen.json`; a.click(); }
         function importBackup(i) { const r = new FileReader(); r.onload = e => { store = JSON.parse(e.target.result); persistData(); location.reload(); }; r.readAsText(i.files[0]); }
         function addGlobalItem(type) { const inp = document.getElementById(type==='subject'?'subInp':'teaInp'); if(!inp.value) return; if(type==='teacher') store.globalTeachers.push(inp.value); else store.globalSubjects.push({n:inp.value, c:document.getElementById('colInp').value, r:false}); inp.value=""; renderLists(); persistData(); }
-        function handleExcelImport(i) { const r = new FileReader(); r.onload = e => { const d = new Uint8Array(e.target.result); const wb = XLSX.read(d, {type:'array'}); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); rows.forEach(row => { if(row[0] && row[1]) { const n = row[0].toString().trim() + " " + row[1].toString().trim(); if(!store.globalTeachers.includes(n)) store.globalTeachers.push(n); } }); renderLists(); persistData(); }; r.readAsArrayBuffer(i.files[0]); }
-
         window.onload = init;
     </script>
 </body>
