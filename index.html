@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Midtstuen Ukeplan v50 - Sky-versjon</title>
+    <title>Midtstuen Ukeplan v55 - SIKKER</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
     
@@ -21,23 +21,32 @@
         .top-nav { background: var(--white); padding: 12px 25px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid var(--border); }
         .status-tag { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: none; }
 
-        /* Grid og Design fra v20 */
+        /* Grid og Design */
         .main-grid { display: grid; grid-template-columns: 280px 1fr 280px; gap: 15px; flex-grow: 1; min-height: 0; }
-        .panel { background: var(--white); padding: 15px; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+        .panel { background: var(--white); padding: 15px; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .scroll-area { flex-grow: 1; overflow-y: auto; }
+        
         table { width: 100%; border-collapse: collapse; border: 3px solid #000; background: white; }
-        th, td { border: 2px solid #000; padding: 8px; text-align: center; }
-        .fane-box { border: 3px solid #000; padding: 10px; border-radius: 12px; min-width: 120px; text-align: center; font-weight: 900; box-shadow: 4px 4px 0px #000; }
+        th, td { border: 2px solid #000; padding: 8px; text-align: center; height: 60px; }
+        .fane-box { border: 3px solid #000; padding: 10px; border-radius: 12px; min-width: 120px; text-align: center; font-weight: 900; box-shadow: 4px 4px 0px #000; background: white; }
+
+        @media print {
+            #loginOverlay, .top-nav, aside.panel, button { display: none !important; }
+            .app-container { display: block !important; padding: 0; }
+            .main-grid { display: block !important; }
+            table { width: 100%; border: 2px solid black; }
+        }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-card">
-        <h1 style="color:var(--primary); font-size: 2.5rem; margin:0;">MIDTSTUEN</h1>
-        <p style="font-weight:800; color:#64748b;">SENTRALISERT UKEPLAN v50</p>
+        <h1 style="color:var(--primary); font-size: 2.5rem; margin:0; font-weight: 900;">MIDTSTUEN</h1>
+        <p style="font-weight:800; color:#64748b;">UKEPLAN SIKKER VERSJON v55</p>
         <button class="btn-ms" onclick="handleLogin()">
             <img src="https://docs.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-azure-ad-apps/ms-symbollockup_signin_light.png" alt="MS" style="height:20px;">
-            Logg inn skole-konto
+            Logg inn med skole-konto
         </button>
     </div>
 </div>
@@ -46,47 +55,48 @@
     <header class="top-nav">
         <div style="display:flex; align-items:center; gap:15px;">
             <h2 style="margin:0; font-weight:900; color:var(--primary);">Midtstuen</h2>
-            <div id="userDisplay" style="font-size:12px; font-weight:700;"></div>
-            <div id="saveStatus" class="status-tag">SKYLAGRET</div>
+            <div id="userDisplay" style="font-size:12px; font-weight:700; color:#64748b;"></div>
+            <div id="saveStatus" class="status-tag">SYNKRONISERT TIL SKY</div>
         </div>
-        <button onclick="handleLogout()" style="background:none; border:1px solid var(--border); padding:5px 10px; border-radius:8px; cursor:pointer;">Logg ut</button>
+        <div style="display:flex; gap:10px;">
+            <button onclick="saveToCloud()" style="background:var(--primary); color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:700;">Lagre nå</button>
+            <button onclick="window.print()" style="background:#f1f5f9; border:1px solid var(--border); padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:700;">Skriv ut</button>
+            <button onclick="handleLogout()" style="background:none; border:1px solid var(--border); padding:8px 15px; border-radius:8px; cursor:pointer;">Logg ut</button>
+        </div>
     </header>
 
     <main class="main-grid">
-        <aside class="panel"><h3>Fag</h3><div id="subjects"></div></aside>
+        <aside class="panel"><h3>📚 Fag</h3><div class="scroll-area" id="subjects">Laster...</div></aside>
         <section class="panel" style="align-items:center;">
             <div style="display:flex; gap:20px; margin-bottom:20px;">
                 <div class="fane-box">KLASSE: <span contenteditable="true" id="skoleKlasse">9A</span></div>
                 <div class="fane-box">UKE: <span contenteditable="true" id="ukeNr">1</span></div>
             </div>
-            <table>
-                <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
-                <tbody id="planBody"></tbody>
-            </table>
+            <div class="scroll-area" style="width:100%;">
+                <table>
+                    <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
+                    <tbody id="planBody"></tbody>
+                </table>
+            </div>
         </section>
-        <aside class="panel"><h3>Lærere</h3><div id="teachers"></div></aside>
+        <aside class="panel"><h3>👤 Lærere</h3><div class="scroll-area" id="teachers">Laster...</div></aside>
     </main>
 </div>
 
 <script>
-    // 1. KONFIGURASJON
+    // 1. KONFIGURASJON (Nøkler er fjernet for sikkerhet)
     const msalConfig = {
         auth: {
             clientId: "5a7c5e44-523e-4951-a527-d88c900a922c",
             authority: "https://login.microsoftonline.com/common",
             redirectUri: "https://37berntsen.github.io/Ukeplan/"
-        }
+        },
+        cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
     };
-
-    // --- LIM INN DINE AZURE KEYS HER ---
-    const COSMOS_ENDPOINT = "DIN_URI_FRA_AZURE"; 
-    const COSMOS_KEY = "DIN_PRIMARY_KEY_FRA_AZURE";
-    const DATABASE_ID = "UkeplanDB";
-    const CONTAINER_ID = "Planer";
 
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-    // 2. INNLOGGINGSLOGIKK
+    // 2. INNLOGGING
     async function handleLogin() {
         try {
             await msalInstance.loginPopup({ scopes: ["openid"] });
@@ -95,7 +105,10 @@
     }
 
     function handleLogout() {
-        msalInstance.logoutPopup().then(() => location.reload());
+        msalInstance.logoutPopup().then(() => {
+            localStorage.clear();
+            location.reload();
+        });
     }
 
     async function checkUser() {
@@ -103,55 +116,54 @@
         if (accounts.length > 0) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainAppContent').style.display = 'flex';
-            document.getElementById('userDisplay').innerText = accounts[0].username;
-            await loadFromCloud(accounts[0].homeAccountId); // Laster skolen sin plan
+            document.getElementById('userDisplay').innerText = "Innlogget: " + accounts[0].username;
+            renderBaseTable();
+            await loadFromCloud(accounts[0].homeAccountId);
         }
     }
 
-    // 3. SKY-LAGRING (COSMOS DB)
+    function renderBaseTable() {
+        const body = document.getElementById('planBody');
+        const tider = ["08:30", "09:15", "10:15", "11:30", "12:15"];
+        body.innerHTML = tider.map(t => `<tr><td>${t}</td><td></td><td></td><td></td><td></td><td></td></tr>`).join('');
+    }
+
+    // 3. SIKKER SKY-LAGRING (Bruker API-mellomstasjon i Azure)
     async function saveToCloud() {
         const account = msalInstance.getAllAccounts()[0];
         if (!account) return;
 
         const planData = {
-            id: account.homeAccountId, // Unik ID for denne skolen
+            id: account.homeAccountId,
             klasse: document.getElementById('skoleKlasse').innerText,
             uke: document.getElementById('ukeNr').innerText,
-            lastUpdated: new Date().toISOString()
+            timestamp: new Date().getTime()
         };
 
-        const resourceUri = `${COSMOS_ENDPOINT}/dbs/${DATABASE_ID}/colls/${CONTAINER_ID}/docs`;
-        
+        // Kaller API-en i Azure som har tilgang til de skjulte nøklene
         try {
-            document.getElementById('saveStatus').style.display = 'none';
-            await fetch(resourceUri, {
+            const res = await fetch("/api/SavePlan", {
                 method: "POST",
-                headers: {
-                    "Authorization": COSMOS_KEY,
-                    "x-ms-documentdb-partitionkey": `["${planData.id}"]`,
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(planData)
             });
-            document.getElementById('saveStatus').style.display = 'block';
-        } catch (err) { console.error("Sky-lagring feilet", err); }
+            if(res.ok) {
+                document.getElementById('saveStatus').style.display = 'block';
+                setTimeout(() => document.getElementById('saveStatus').style.display = 'none', 3000);
+            }
+        } catch (err) { console.error("Sikker lagring feilet", err); }
     }
 
     async function loadFromCloud(schoolId) {
-        const resourceUri = `${COSMOS_ENDPOINT}/dbs/${DATABASE_ID}/colls/${CONTAINER_ID}/docs/${schoolId}`;
         try {
-            const res = await fetch(resourceUri, { headers: { "Authorization": COSMOS_KEY } });
+            const res = await fetch(`/api/GetPlan?id=${schoolId}`);
             const data = await res.json();
             if (data.id) {
                 document.getElementById('skoleKlasse').innerText = data.klasse;
                 document.getElementById('ukeNr').innerText = data.uke;
-                console.log("Plan lastet fra skyen.");
             }
-        } catch (err) { console.log("Ingen plan funnet, starter tom."); }
+        } catch (err) { console.log("Laster fra skyen via API..."); }
     }
-
-    // Auto-lagre hvert 30. sekund hvis endringer er gjort
-    setInterval(saveToCloud, 30000);
 
     window.onload = checkUser;
 </script>
