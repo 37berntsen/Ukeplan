@@ -3,53 +3,42 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Midtstuen skole - Ukeplan v48</title>
+    <title>Midtstuen Ukeplan v50 - Sky-versjon</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
     
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; --success: #16a34a; --white: #ffffff; --border: #cbd5e1; }
-        body, html { height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-        .app-container { display: flex; flex-direction: column; height: 100vh; padding: 15px; box-sizing: border-box; gap: 15px; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --white: #ffffff; --border: #cbd5e1; }
+        body, html { height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); overflow: hidden; }
+        .app-container { display: none; flex-direction: column; height: 100vh; padding: 15px; box-sizing: border-box; gap: 15px; }
         
-        /* Innloggingsskjerm Design */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20000; text-align: center; }
-        #mainAppContent { display: none; height: 100vh; flex-direction: column; }
-        
-        .btn-ms { background: #2f2f2f; color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 12px; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s; }
-        .btn-ms:hover { background: #000; transform: translateY(-2px); }
-        
-        /* Gjenbruker dine stiler fra v20/MID-2 */
+        /* Innlogging */
+        #loginOverlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20000; }
+        .login-card { background: white; padding: 40px; border-radius: 20px; border: 3px solid #000; box-shadow: 10px 10px 0px #cbd5e1; text-align: center; }
+        .btn-ms { background: #2f2f2f; color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 12px; margin: 20px auto; }
+
+        /* Toppmeny */
         .top-nav { background: var(--white); padding: 12px 25px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-        .fane-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; }
-        .fane-box { background: var(--white); border: 3px solid #000; padding: 10px 20px; border-radius: 12px; text-align: center; min-width: 150px; box-shadow: 4px 4px 0px #000; }
-        .fane-label { font-size: 10px; font-weight: 900; text-transform: uppercase; display: block; margin-bottom: 3px; color: #64748b; }
-        .fane-content { font-weight: 900; font-size: 1.1rem; outline: none; }
-        
+        .status-tag { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: none; }
+
+        /* Grid og Design fra v20 */
         .main-grid { display: grid; grid-template-columns: 280px 1fr 280px; gap: 15px; flex-grow: 1; min-height: 0; }
-        .panel { background: var(--white); padding: 15px; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
-        .scroll-area { flex-grow: 1; overflow-y: auto; }
-        
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 3px solid #000; flex-grow: 1; }
-        th, td { border: 2px solid #000 !important; text-align: center; vertical-align: middle; padding: 5px; }
-        th { background: #f1f5f9; font-weight: 900; font-size: 13px; }
-        .time-cell { width: 90px; background: #f8fafc; font-weight: bold; }
-        
-        .subject-display { font-weight: 900; font-size: 14px; text-transform: uppercase; }
-        .teacher-chip { display: inline-block; background: #fff; border: 1px solid #000; border-radius: 4px; padding: 2px 5px; font-size: 10px; margin: 2px; }
+        .panel { background: var(--white); padding: 15px; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+        table { width: 100%; border-collapse: collapse; border: 3px solid #000; background: white; }
+        th, td { border: 2px solid #000; padding: 8px; text-align: center; }
+        .fane-box { border: 3px solid #000; padding: 10px; border-radius: 12px; min-width: 120px; text-align: center; font-weight: 900; box-shadow: 4px 4px 0px #000; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
-    <div style="background: white; padding: 40px; border-radius: 20px; border: 3px solid #000; box-shadow: 10px 10px 0px #cbd5e1;">
-        <h1 style="margin:0; color:var(--primary); font-size: 2.2rem; font-weight: 900;">MIDTSTUEN</h1>
-        <p style="font-weight: 700; color: #64748b; margin: 10px 0 30px 0;">Ukeplanlegger Pro v48</p>
+    <div class="login-card">
+        <h1 style="color:var(--primary); font-size: 2.5rem; margin:0;">MIDTSTUEN</h1>
+        <p style="font-weight:800; color:#64748b;">SENTRALISERT UKEPLAN v50</p>
         <button class="btn-ms" onclick="handleLogin()">
             <img src="https://docs.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-azure-ad-apps/ms-symbollockup_signin_light.png" alt="MS" style="height:20px;">
-            Logg inn med @osloskolen
+            Logg inn skole-konto
         </button>
-        <p style="font-size: 11px; margin-top: 20px; color: #94a3b8;">Ingen sensitive data deles med appen.</p>
     </div>
 </div>
 
@@ -57,98 +46,112 @@
     <header class="top-nav">
         <div style="display:flex; align-items:center; gap:15px;">
             <h2 style="margin:0; font-weight:900; color:var(--primary);">Midtstuen</h2>
-            <div id="userTag" style="background:#e2e8f0; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:800;"></div>
+            <div id="userDisplay" style="font-size:12px; font-weight:700;"></div>
+            <div id="saveStatus" class="status-tag">SKYLAGRET</div>
         </div>
-        <div style="display:flex; gap:10px;">
-            <button class="btn" onclick="exportBackup()" style="border:1.5px solid #000; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:700;">💾 Lagre fil</button>
-            <button class="btn" onclick="handleLogout()" style="background:#fee2e2; color:#b91c1c; border:none; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:700;">Logg ut</button>
-        </div>
+        <button onclick="handleLogout()" style="background:none; border:1px solid var(--border); padding:5px 10px; border-radius:8px; cursor:pointer;">Logg ut</button>
     </header>
 
     <main class="main-grid">
-        <aside class="panel">
-            <h3 style="margin-top:0;">📚 Fag</h3>
-            <div class="scroll-area" id="subjectsList"></div>
-        </aside>
-
-        <section id="printArea" style="background:white; padding:20px; border-radius:16px; border:1px solid var(--border); display:flex; flex-direction:column;">
-            <div class="fane-container">
-                <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" id="labelKlasse" contenteditable="true">9A</span></div>
-                <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" id="labelUke" contenteditable="true">1</span></div>
+        <aside class="panel"><h3>Fag</h3><div id="subjects"></div></aside>
+        <section class="panel" style="align-items:center;">
+            <div style="display:flex; gap:20px; margin-bottom:20px;">
+                <div class="fane-box">KLASSE: <span contenteditable="true" id="skoleKlasse">9A</span></div>
+                <div class="fane-box">UKE: <span contenteditable="true" id="ukeNr">1</span></div>
             </div>
-            <table id="mainTable">
+            <table>
                 <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
-                <tbody id="tableBody"></tbody>
+                <tbody id="planBody"></tbody>
             </table>
         </section>
-
-        <aside class="panel">
-            <h3 style="margin-top:0;">👤 Lærere</h3>
-            <div class="scroll-area" id="teachersList"></div>
-        </aside>
+        <aside class="panel"><h3>Lærere</h3><div id="teachers"></div></aside>
     </main>
 </div>
 
 <script>
-    // AZURE KONFIGURASJON (Dine ID-er)
+    // 1. KONFIGURASJON
     const msalConfig = {
         auth: {
             clientId: "5a7c5e44-523e-4951-a527-d88c900a922c",
             authority: "https://login.microsoftonline.com/common",
             redirectUri: "https://37berntsen.github.io/Ukeplan/"
-        },
-        cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
+        }
     };
+
+    // --- LIM INN DINE AZURE KEYS HER ---
+    const COSMOS_ENDPOINT = "DIN_URI_FRA_AZURE"; 
+    const COSMOS_KEY = "DIN_PRIMARY_KEY_FRA_AZURE";
+    const DATABASE_ID = "UkeplanDB";
+    const CONTAINER_ID = "Planer";
 
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
+    // 2. INNLOGGINGSLOGIKK
     async function handleLogin() {
         try {
-            // Ber kun om openid for å minimere behovet for admin-samtykke
-            await msalInstance.loginPopup({ scopes: ["openid"], prompt: "select_account" });
+            await msalInstance.loginPopup({ scopes: ["openid"] });
             checkUser();
-        } catch (error) {
-            console.error("Login feilet:", error);
-            alert("Kunne ikke logge inn. Sjekk om din organisasjon tillater denne appen.");
-        }
+        } catch (e) { console.error(e); }
     }
 
     function handleLogout() {
-        msalInstance.logoutPopup().then(() => {
-            localStorage.clear();
-            location.reload();
-        });
+        msalInstance.logoutPopup().then(() => location.reload());
     }
 
-    function checkUser() {
+    async function checkUser() {
         const accounts = msalInstance.getAllAccounts();
         if (accounts.length > 0) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainAppContent').style.display = 'flex';
-            document.getElementById('userTag').innerText = "👤 " + (accounts[0].username || "Logget inn");
-            initApp(); 
+            document.getElementById('userDisplay').innerText = accounts[0].username;
+            await loadFromCloud(accounts[0].homeAccountId); // Laster skolen sin plan
         }
     }
 
-    // DIN ORIGINALE UKEPLAN-LOGIKK (Gjenbrukt fra Timeplan-MID-2.html)
-    function initApp() {
-        console.log("App startet for bruker.");
-        renderTable();
-        // Legg til resten av dine funksjoner: renderLists, addGlobalItem, persistData osv her.
+    // 3. SKY-LAGRING (COSMOS DB)
+    async function saveToCloud() {
+        const account = msalInstance.getAllAccounts()[0];
+        if (!account) return;
+
+        const planData = {
+            id: account.homeAccountId, // Unik ID for denne skolen
+            klasse: document.getElementById('skoleKlasse').innerText,
+            uke: document.getElementById('ukeNr').innerText,
+            lastUpdated: new Date().toISOString()
+        };
+
+        const resourceUri = `${COSMOS_ENDPOINT}/dbs/${DATABASE_ID}/colls/${CONTAINER_ID}/docs`;
+        
+        try {
+            document.getElementById('saveStatus').style.display = 'none';
+            await fetch(resourceUri, {
+                method: "POST",
+                headers: {
+                    "Authorization": COSMOS_KEY,
+                    "x-ms-documentdb-partitionkey": `["${planData.id}"]`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(planData)
+            });
+            document.getElementById('saveStatus').style.display = 'block';
+        } catch (err) { console.error("Sky-lagring feilet", err); }
     }
 
-    const slotsTemplate = [{t:"08:30-09:15"}, {t:"09:15-10:00"}, {t:"10:00-10:15", p:"PAUSE"}, {t:"10:15-11:00"}]; // Forkortet for eksempelet
-    
-    function renderTable() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = "";
-        slotsTemplate.forEach(s => {
-            let row = `<tr><td class="time-cell">${s.t}</td>`;
-            if(s.p) row += `<td colspan="5" style="background:#f1f5f9; font-size:10px;">${s.p}</td>`;
-            else { for(let i=0; i<5; i++) row += `<td></td>`; }
-            tbody.innerHTML += row + "</tr>";
-        });
+    async function loadFromCloud(schoolId) {
+        const resourceUri = `${COSMOS_ENDPOINT}/dbs/${DATABASE_ID}/colls/${CONTAINER_ID}/docs/${schoolId}`;
+        try {
+            const res = await fetch(resourceUri, { headers: { "Authorization": COSMOS_KEY } });
+            const data = await res.json();
+            if (data.id) {
+                document.getElementById('skoleKlasse').innerText = data.klasse;
+                document.getElementById('ukeNr').innerText = data.uke;
+                console.log("Plan lastet fra skyen.");
+            }
+        } catch (err) { console.log("Ingen plan funnet, starter tom."); }
     }
+
+    // Auto-lagre hvert 30. sekund hvis endringer er gjort
+    setInterval(saveToCloud, 30000);
 
     window.onload = checkUser;
 </script>
