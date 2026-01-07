@@ -1,105 +1,36 @@
-:root { 
-    --blue: #2563eb; 
-    --dark: #1e293b; 
-    --bg: #f8fafc; 
-    --border: #000; 
-}
+:root { --blue: #2563eb; --dark: #1e293b; --bg: #f8fafc; --border: #000; }
+body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); height: 100vh; overflow: hidden; }
 
-body { 
-    margin: 0; 
-    font-family: 'Segoe UI', sans-serif; 
-    background: var(--bg); 
-    height: 100vh; 
-    overflow: hidden; 
-}
+/* Topplinje */
+.main-header { background: #fff; padding: 10px 25px; display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; }
+.logo { font-size: 24px; font-weight: 900; color: var(--blue); letter-spacing: -1px; }
+.header-left, .header-right { display: flex; align-items: center; gap: 10px; }
 
-/* Header og Toppmeny */
-.main-header { 
-    background: #fff; 
-    padding: 10px 25px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-bottom: 2px solid #e2e8f0; 
-}
+/* Grid layout */
+.main-layout { display: grid; grid-template-columns: 240px 1fr 240px; gap: 20px; padding: 20px; height: calc(100vh - 80px); }
+.sidebar { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; }
 
-.logo { font-size: 24px; font-weight: 900; color: var(--blue); }
-
-/* Layout-oppsett med tre kolonner */
-.main-layout { 
-    display: grid; 
-    grid-template-columns: 240px 1fr 240px; 
-    gap: 20px; 
-    padding: 20px; 
-    height: calc(100vh - 80px); 
-}
-
-.sidebar { 
-    background: white; 
-    border: 1px solid #e2e8f0; 
-    border-radius: 12px; 
-    padding: 15px; 
-    display: flex; 
-    flex-direction: column; 
-}
-
-/* Midtre seksjon med tabell */
-.schedule-container { display: flex; flex-direction: column; gap: 15px; }
-
-.info-row { display: flex; justify-content: center; gap: 15px; }
-
-.info-card { 
-    background: white; 
-    border: 2px solid var(--border); 
-    padding: 8px 30px; 
-    border-radius: 12px; 
-    text-align: center; 
-    box-shadow: 4px 4px 0px var(--border); 
-}
-
+/* Info-kortene (Klasse, Lærer, Uke) */
+.info-row { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
+.info-card { background: white; border: 2px solid var(--border); padding: 8px 30px; border-radius: 12px; text-align: center; box-shadow: 4px 4px 0px var(--border); }
 .info-card span { display: block; font-size: 10px; font-weight: 800; color: #64748b; }
 
-.table-wrapper { 
-    background: white; 
-    border: 2px solid var(--border); 
-    border-radius: 10px; 
-    overflow: auto; 
-    flex-grow: 1; 
-}
-
+/* Tabellen */
+.table-card { background: white; border: 2px solid var(--border); border-radius: 10px; overflow: hidden; flex-grow: 1; }
 table { width: 100%; border-collapse: collapse; }
-
-th { 
-    border-bottom: 2px solid var(--border); 
-    padding: 12px; 
-    font-size: 13px; 
-    font-weight: 900; 
-    text-transform: uppercase; 
-}
-
-td { 
-    border: 1px solid #cbd5e1; 
-    height: 60px; 
-    text-align: center; 
-    padding: 5px; 
-    vertical-align: top; 
-}
+th { border-bottom: 2px solid var(--border); padding: 12px; font-size: 13px; font-weight: 900; }
+td { border: 1px solid #e2e8f0; height: 55px; text-align: center; vertical-align: top; padding: 5px; }
+td:first-child { font-weight: bold; background: #f8fafc; width: 80px; vertical-align: middle; font-size: 12px; }
 
 /* Fag-brikker */
-.fag-item { 
-    padding: 10px; 
-    margin-bottom: 10px; 
-    border: 1px solid var(--border); 
-    border-radius: 8px; 
-    cursor: grab; 
-    font-weight: 700; 
-    font-size: 13px; 
-    text-align: center; 
-}
+.fag-item { padding: 8px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: grab; font-weight: 700; font-size: 13px; text-align: center; }
 
 /* Knapper */
 .btn-blue { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.btn-green { background: #22c55e; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; }
-.btn-red { background: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; }
+.btn-green { background: #22c55e; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; }
+.btn-red { background: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; }
+.btn-header { background: white; border: 1px solid #cbd5e1; padding: 8px 15px; border-radius: 6px; font-weight: 700; cursor: pointer; }
 
+/* Login */
 #loginOverlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.login-card { background: white; padding: 50px; border: 3px solid var(--border); border-radius: 20px; text-align: center; box-shadow: 10px 10px 0px var(--dark); }
