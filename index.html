@@ -2,7 +2,6 @@
 <html lang="no">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Midtstuen Ukeplan v61</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -10,7 +9,7 @@
 <body>
     <div id="loginOverlay">
         <div class="login-card">
-            <h1>MIDTSTUEN</h1>
+            <h1 style="color:#2563eb; font-weight:900;">MIDTSTUEN</h1>
             <button id="loginBtn" class="btn-blue">Logg inn med Google</button>
         </div>
     </div>
@@ -19,13 +18,10 @@
         <header class="main-header">
             <div class="header-left">
                 <span class="logo">Midtstuen</span>
-                <span class="label">KLASSE:</span>
-                <input type="text" id="klasseInput" value="9A">
-                <button class="btn-blue-small">+ Ny Klasse</button>
+                <input type="text" id="klasseInput" value="9A" style="width:40px; font-weight:bold; margin-left:10px;">
             </div>
             <div class="header-right">
-                <button id="adminSaveBtn" class="btn-white" style="display:none;">Lagre fil</button>
-                <button class="btn-white">Last opp</button>
+                <button id="adminSaveBtn" class="btn-blue" style="display:none; background:#fff; color:#000; border:1px solid #000;">Lagre fil</button>
                 <button class="btn-red">Nullstill</button>
                 <button class="btn-green" id="pdfBtn">LAG PDF</button>
             </div>
@@ -34,16 +30,16 @@
         <div class="main-layout">
             <aside class="sidebar">
                 <h3>Fag</h3>
-                <div class="fag-list" id="fagListe">
+                <div id="fagListe">
                     <div class="fag-item" draggable="true" style="background:#ffcfcf">Norsk</div>
                     <div class="fag-item" draggable="true" style="background:#cfebff">Engelsk</div>
                     <div class="fag-item" draggable="true" style="background:#fff3cf">Samfunnsfag</div>
                     <div class="fag-item" draggable="true" style="background:#cfffeb">Naturfag</div>
                 </div>
-                <button class="btn-logout" id="logoutBtn">Logg ut</button>
+                <button id="logoutBtn" style="margin-top:auto; padding:8px; border-radius:6px; cursor:pointer;">Logg ut</button>
             </aside>
 
-            <section class="schedule-area">
+            <section class="schedule-container">
                 <div class="info-row">
                     <div class="info-card"><span>KLASSE</span><strong>9A</strong></div>
                     <div class="info-card"><span>UKE</span><strong>1</strong></div>
@@ -51,7 +47,7 @@
                 <div class="table-wrapper">
                     <table id="planTable">
                         <thead>
-                            <tr><th>TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr>
+                            <tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr>
                         </thead>
                         <tbody id="planBody"></tbody>
                     </table>
