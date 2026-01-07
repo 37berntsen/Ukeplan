@@ -1,15 +1,105 @@
-:root { --blue: #2563eb; --dark: #1e293b; --border: #000; }
-body { margin: 0; font-family: sans-serif; background: #f8fafc; overflow: hidden; }
-.main-header { background: #fff; padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #ddd; }
-.logo { font-size: 22px; font-weight: 900; color: var(--blue); margin-right: 20px; }
-.main-layout { display: grid; grid-template-columns: 200px 1fr 200px; gap: 20px; padding: 20px; height: calc(100vh - 80px); }
-.sidebar { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 15px; }
-.table-wrapper { background: #fff; border: 2px solid var(--border); border-radius: 8px; overflow: auto; }
+:root { 
+    --blue: #2563eb; 
+    --dark: #1e293b; 
+    --bg: #f8fafc; 
+    --border: #000; 
+}
+
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', sans-serif; 
+    background: var(--bg); 
+    height: 100vh; 
+    overflow: hidden; 
+}
+
+/* Header og Toppmeny */
+.main-header { 
+    background: #fff; 
+    padding: 10px 25px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 2px solid #e2e8f0; 
+}
+
+.logo { font-size: 24px; font-weight: 900; color: var(--blue); }
+
+/* Layout-oppsett med tre kolonner */
+.main-layout { 
+    display: grid; 
+    grid-template-columns: 240px 1fr 240px; 
+    gap: 20px; 
+    padding: 20px; 
+    height: calc(100vh - 80px); 
+}
+
+.sidebar { 
+    background: white; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 12px; 
+    padding: 15px; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+/* Midtre seksjon med tabell */
+.schedule-container { display: flex; flex-direction: column; gap: 15px; }
+
+.info-row { display: flex; justify-content: center; gap: 15px; }
+
+.info-card { 
+    background: white; 
+    border: 2px solid var(--border); 
+    padding: 8px 30px; 
+    border-radius: 12px; 
+    text-align: center; 
+    box-shadow: 4px 4px 0px var(--border); 
+}
+
+.info-card span { display: block; font-size: 10px; font-weight: 800; color: #64748b; }
+
+.table-wrapper { 
+    background: white; 
+    border: 2px solid var(--border); 
+    border-radius: 10px; 
+    overflow: auto; 
+    flex-grow: 1; 
+}
+
 table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #ddd; padding: 10px; text-align: center; height: 50px; }
-.info-row { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; }
-.info-card { background: #fff; border: 2px solid var(--border); padding: 5px 20px; border-radius: 8px; text-align: center; box-shadow: 3px 3px 0px var(--border); }
-.fag-item { padding: 8px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: grab; font-weight: bold; font-size: 13px; }
-.btn-blue { background: var(--blue); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-#loginOverlay { position: fixed; inset: 0; background: #f8fafc; display: flex; align-items: center; justify-content: center; z-index: 100; }
-.login-card { background: #fff; padding: 40px; border: 3px solid var(--border); border-radius: 15px; text-align: center; }
+
+th { 
+    border-bottom: 2px solid var(--border); 
+    padding: 12px; 
+    font-size: 13px; 
+    font-weight: 900; 
+    text-transform: uppercase; 
+}
+
+td { 
+    border: 1px solid #cbd5e1; 
+    height: 60px; 
+    text-align: center; 
+    padding: 5px; 
+    vertical-align: top; 
+}
+
+/* Fag-brikker */
+.fag-item { 
+    padding: 10px; 
+    margin-bottom: 10px; 
+    border: 1px solid var(--border); 
+    border-radius: 8px; 
+    cursor: grab; 
+    font-weight: 700; 
+    font-size: 13px; 
+    text-align: center; 
+}
+
+/* Knapper */
+.btn-blue { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.btn-green { background: #22c55e; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; }
+.btn-red { background: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; }
+
+#loginOverlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
