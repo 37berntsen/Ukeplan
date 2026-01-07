@@ -2,14 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// BRUK DIN NYESTE CONFIG HER (Den fra Steg 3 tidligere)
 const firebaseConfig = {
-  apiKey: "AIzaSy...", 
-  authDomain: "midtstuen-ukeplan-2026.firebaseapp.com",
-  projectId: "midtstuen-ukeplan-2026",
-  storageBucket: "midtstuen-ukeplan-2026.firebasestorage.app",
-  messagingSenderId: "...",
-  appId: "..."
+  apiKey: "AIzaSyCGyPMHUac2lHwIsmjYxKr_6dtQKAVQHe8",
+  authDomain: "ukeplanskole-790e3.firebaseapp.com",
+  projectId: "ukeplanskole-790e3",
+  storageBucket: "ukeplanskole-790e3.firebasestorage.app",
+  messagingSenderId: "59113153158",
+  appId: "1:59113153158:web:57934f14254da5a19d6707"
 };
 
 const app = initializeApp(firebaseConfig);
