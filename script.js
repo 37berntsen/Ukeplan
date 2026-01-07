@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// KONFIGURASJON - Bruker din faktiske nøkkel nå
 const firebaseConfig = {
   apiKey: "AIzaSyCGyPMHUac2lHwIsmjYxKr_6dtQKAVQHe8", 
   authDomain: "ukeplanskole-790e3.firebaseapp.com",
@@ -12,24 +11,17 @@ const firebaseConfig = {
   appId: "1:59113153158:web:57934f14254da5a19d6707"
 };
 
-// Initialiser kun EN gang
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-const tider = ["08:30-09:15", "09:15-10:00", "10:15-11:00", "11:00-11:45", "11:45-12:15 (PAUSE)", "12:15-13:00", "13:00-13:45", "13:45-14:00 (PAUSE)", "14:00-14:45", "14:45-15:30"];
+const tider = ["08:30-09:15", "09:15-10:00", "10:15-11:00", "11:00-11:45", "11:45-12:15 (LUNSJ)", "12:15-13:00", "13:00-13:45", "13:45-14:00 (PAUSE)", "14:00-14:45", "14:45-15:30"];
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
-        
-        // Sjekk admin-tilgang
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().role === "admin") {
-            document.getElementById('adminSaveBtn').style.display = 'inline-block';
-        }
         renderTable();
         loadData();
     } else {
@@ -40,31 +32,28 @@ onAuthStateChanged(auth, async (user) => {
 
 function renderTable() {
     const body = document.getElementById('planBody');
-    if (!body) return;
-    
     body.innerHTML = tider.map((tid, i) => {
-        if (tid.includes("PAUSE")) {
-            return `<tr style="background:#f1f5f9; font-weight:900; font-size:11px; height:30px;"><td colspan="6">${tid}</td></tr>`;
+        if (tid.includes("LUNSJ") || tid.includes("PAUSE")) {
+            return `<tr style="background:#f1f5f9; font-weight:900; font-size:11px;"><td colspan="6">${tid}</td></tr>`;
         }
-        return `<tr><td style="font-weight:bold; background:#f8fafc; width:90px; font-size:11px; vertical-align:middle;">${tid}</td>${Array(5).fill(0).map((_, j) => `<td id="cell-${i}-${j}" class="drop-zone"></td>`).join('')}</tr>`;
+        return `<tr><td class="time-col">${tid}</td>${Array(5).fill(0).map((_, j) => `<td id="cell-${i}-${j}" class="drop-zone"></td>`).join('')}</tr>`;
     }).join('');
     setupDragDrop();
 }
 
 function setupDragDrop() {
-    document.querySelectorAll('.fag-item').forEach(item => {
+    document.querySelectorAll('.fag-item, .laerer-item').forEach(item => {
         item.ondragstart = (e) => e.dataTransfer.setData("text", e.target.innerText + "|" + e.target.style.backgroundColor);
     });
     document.querySelectorAll('.drop-zone').forEach(zone => {
         zone.ondragover = (e) => e.preventDefault();
         zone.ondrop = (e) => {
             const [txt, bg] = e.dataTransfer.getData("text").split('|');
-            zone.innerHTML = `<div style="background:${bg}; padding:8px; border-radius:6px; font-weight:bold; border:1px solid #000; font-size:12px;">${txt}</div>`;
+            zone.innerHTML = `<div style="background:${bg}; padding:8px; border-radius:6px; font-weight:800; border:2px solid #000; font-size:12px;">${txt}</div>`;
         };
     });
 }
 
-// Koble til knappene
 document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
 document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
@@ -76,11 +65,9 @@ document.getElementById('adminSaveBtn').onclick = async () => {
 
 function loadData() {
     onSnapshot(doc(db, "ukeplaner", "hovedplan"), (doc) => {
-        if (doc.exists()) {
-            doc.data().cells.forEach(c => {
-                const el = document.getElementById(c.id);
-                if (el) el.innerHTML = c.html;
-            });
-        }
+        if (doc.exists()) doc.data().cells.forEach(c => {
+            const el = document.getElementById(c.id);
+            if (el) el.innerHTML = c.html;
+        });
     });
 }
