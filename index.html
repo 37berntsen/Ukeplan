@@ -2,78 +2,69 @@
 <html lang="no">
 <head>
     <meta charset="utf-8"/>
-    <title>Midtstuen Ukeplan v61</title>
+    <title>Midtstuen skole - Ukeplan v61</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div id="loginOverlay">
-        <div class="login-box">
-            <h1 style="color:var(--blue); font-weight:900; font-size: 45px; margin-bottom: 40px;">MIDTSTUEN</h1>
-            <button id="loginBtn" class="btn-main" style="background:var(--blue); color:white; font-size: 18px; padding: 15px 40px;">Logg inn med Google</button>
+        <div class="login-card">
+            <h1 style="color:var(--primary); font-size: 40px; margin-bottom: 30px;">MIDTSTUEN</h1>
+            <button id="loginBtn" class="btn btn-primary" style="padding: 15px 40px;">Logg inn med Google</button>
         </div>
     </div>
 
     <div class="app-container" id="mainApp" style="display:none;">
-        <header class="main-header">
-            <div class="logo-section">
-                <span class="logo-text">Midtstuen</span>
-                <div style="background:#f1f5f9; padding:5px 12px; border-radius:8px; display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:10px; font-weight:800; color:#64748b;">KLASSE:</span>
-                    <input type="text" id="klasseInput" value="9A" style="width:40px; border:none; background:none; font-weight:900; color:var(--blue);">
-                </div>
-                <button class="btn-main" style="background:var(--blue); color:white; padding:6px 15px; font-size:11px;">+ Ny Klasse</button>
+        <div class="top-nav">
+            <div class="nav-group">
+                <h2 style="margin:0; font-weight:900; color:var(--primary);">Midtstuen</h2>
+                <select id="planSelector"></select>
+                <button class="btn btn-primary" id="newPlanBtn">+ Ny Klasse</button>
             </div>
-            <div style="display:flex; gap:12px;">
-                <button id="adminSaveBtn" class="btn-main btn-save" style="display:none;">Lagre fil</button>
-                <button class="btn-main" style="background:#fff; border:1px solid #cbd5e1;">Last opp</button>
-                <button class="btn-main btn-red" onclick="location.reload()">Nullstill</button>
-                <button class="btn-main btn-green" id="pdfBtn">LAG PDF</button>
+            <div class="nav-group">
+                <button id="adminSaveBtn" class="btn" style="display:none;">Lagre til skyen</button>
+                <button class="btn btn-danger" id="resetBtn">Nullstill</button>
+                <button class="btn btn-success" id="pdfBtn">🖨️ LAG PDF</button>
             </div>
-        </header>
+        </div>
 
-        <div class="content-grid">
-            <aside class="card-panel">
-                <h3 style="margin-top:0;">FAG</h3>
-                <div style="display:flex; gap:5px; margin-bottom:15px;">
-                    <input type="text" id="nyttFag" placeholder="Nytt fag..." style="flex:1; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
-                    <button id="addFagBtn" class="btn-main" style="background:var(--blue); color:white; padding:0 12px;">+</button>
+        <div class="main-grid">
+            <div class="panel">
+                <h3>Fag</h3>
+                <div style="display:flex; gap:5px;">
+                    <input type="color" id="colInp" value="#bfdbfe" style="width:35px; height:35px; border:none;">
+                    <input type="text" id="subInp" placeholder="Nytt fag..." style="flex:1; padding:8px; border-radius:8px;">
+                    <button class="btn btn-primary" id="addFagBtn">+</button>
                 </div>
-                <div id="fagListe">
-                    <div class="fag-chip" draggable="true" style="background:#ffcfcf">Norsk <span>×</span></div>
-                    <div class="fag-chip" draggable="true" style="background:#cfebff">Engelsk <span>×</span></div>
-                    <div class="fag-chip" draggable="true" style="background:#fff3cf">Samfunnsfag <span>×</span></div>
-                    <div class="fag-chip" draggable="true" style="background:#cfffeb">Naturfag <span>×</span></div>
-                </div>
-                <button id="logoutBtn" style="margin-top:auto; padding:10px; border-radius:8px; cursor:pointer; background:#f1f5f9; border:1px solid #cbd5e1;">Logg ut</button>
-            </aside>
+                <div class="scroll-area" id="subjectsList"></div>
+            </div>
 
-            <main class="schedule-view">
-                <div class="top-info">
-                    <div class="info-pill"><span>KLASSE</span><strong>9A</strong></div>
-                    <div class="info-pill"><span>UKE</span><strong>1</strong></div>
+            <div id="printArea">
+                <div class="tab-nav">
+                    <div class="tab active" id="tabClass">KLASSE</div>
+                    <div class="tab" id="tabTeacher">LÆRER</div>
                 </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr>
-                        </thead>
-                        <tbody id="planBody"></tbody>
-                    </table>
+                <div class="fane-container">
+                    <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" contenteditable="true" id="labelKlasse">9A</span></div>
+                    <div class="fane-box"><span class="fane-label">Kontaktlærer</span><span class="fane-content" contenteditable="true" id="labelLaerer">-</span></div>
+                    <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" contenteditable="true" id="labelUke">1</span></div>
                 </div>
-            </main>
+                <table>
+                    <thead><tr><th>TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
 
-            <aside class="card-panel">
-                <h3 style="margin-top:0;">LÆRERE</h3>
+            <div class="panel">
+                <h3>Lærere</h3>
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <input type="text" id="nyLaerer" placeholder="Navn..." style="flex:1; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
-                    <button id="addLaererBtn" class="btn-main" style="background:var(--blue); color:white; padding:0 12px;">+</button>
+                    <input type="text" id="teaInp" placeholder="Navn..." style="flex:1; padding:8px;">
+                    <button class="btn btn-primary" id="addTeaBtn">+</button>
                 </div>
-                <button class="btn-main" style="background:#fff; border:1px solid #cbd5e1; font-size:11px; margin-bottom:15px;">Importer Excel (A+B)</button>
-                <div id="laererListe">
-                    <div class="laerer-chip" draggable="true" style="background:#fff">Ola Nordmann <span>×</span></div>
-                </div>
-            </aside>
+                <button class="btn" style="width:100%; margin-bottom:10px;" id="importExcelBtn">Importer Excel (A+B)</button>
+                <input type="file" id="excelInput" style="display:none;" accept=".xlsx,.xls">
+                <div class="scroll-area" id="teachersList"></div>
+            </div>
         </div>
     </div>
     <script type="module" src="script.js"></script>
