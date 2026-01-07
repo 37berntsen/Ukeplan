@@ -4,13 +4,12 @@
     <meta charset="utf-8"/>
     <title>Midtstuen Ukeplan v61</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div id="loginOverlay">
         <div class="login-card">
-            <h1 style="color:#2563eb; font-weight:900; font-size: 40px; margin-bottom: 30px;">MIDTSTUEN</h1>
-            <button id="loginBtn" class="btn-header" style="background:#2563eb; color:white; padding: 15px 40px;">Logg inn med Google</button>
+            <h1 style="color:#2563eb; font-weight:900; font-size:40px; margin-bottom:30px;">MIDTSTUEN</h1>
+            <button id="loginBtn" class="btn-header" style="background:#2563eb; color:white; padding:15px 40px;">Logg inn med Google</button>
         </div>
     </div>
 
@@ -18,27 +17,26 @@
         <header class="main-header">
             <div class="logo-area">
                 <span class="logo-text">Midtstuen</span>
-                <input type="text" id="klasseInput" value="9A" style="width:50px; font-weight:900; padding:5px; border-radius:5px; border:1px solid #ccc;">
+                <input type="text" id="klasseInput" value="9A" style="width:50px; font-weight:900;">
             </div>
             <div style="display:flex; gap:10px;">
-                <button id="adminSaveBtn" class="btn-header btn-save" style="display:none;">Lagre fil</button>
-                <button class="btn-header btn-red">Nullstill</button>
-                <button class="btn-header btn-green" id="pdfBtn">LAG PDF</button>
+                <button id="adminSaveBtn" class="btn-header btn-save">Lagre til skyen</button>
+                <button class="btn-header btn-red" onclick="location.reload()">Nullstill</button>
+                <button class="btn-header btn-green">LAG PDF</button>
             </div>
         </header>
 
         <div class="content-wrapper">
             <aside class="sidebar">
-                <h3 style="margin-top:0;">Fag</h3>
+                <h3>FAG</h3>
                 <div id="fagListe">
                     <div class="fag-item" draggable="true" style="background:#ffcfcf">Norsk</div>
                     <div class="fag-item" draggable="true" style="background:#cfebff">Engelsk</div>
                     <div class="fag-item" draggable="true" style="background:#fff3cf">Samfunnsfag</div>
                     <div class="fag-item" draggable="true" style="background:#cfffeb">Naturfag</div>
                     <div class="fag-item" draggable="true" style="background:#f3e8ff">KRLE</div>
-                    <div class="fag-item" draggable="true" style="background:#f1f5f9">Kroppsøving</div>
                 </div>
-                <button id="logoutBtn" style="margin-top:auto; padding:10px; border-radius:8px; cursor:pointer; background:#fee2e2; border:1px solid #ef4444; color:#ef4444; font-weight:700;">Logg ut</button>
+                <button id="logoutBtn" style="margin-top:auto;">Logg ut</button>
             </aside>
 
             <main class="schedule-area">
@@ -49,7 +47,7 @@
                 <div class="table-card">
                     <table>
                         <thead>
-                            <tr><th>TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr>
+                            <tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr>
                         </thead>
                         <tbody id="planBody"></tbody>
                     </table>
@@ -57,9 +55,11 @@
             </main>
 
             <aside class="sidebar">
-                <h3 style="margin-top:0;">Lærere</h3>
+                <h3>LÆRERE</h3>
                 <div id="laererListe">
-                    </div>
+                    <div class="laerer-item" draggable="true" style="background:#eee">Ola Nordmann</div>
+                    <div class="laerer-item" draggable="true" style="background:#eee">Kari Nordmann</div>
+                </div>
             </aside>
         </div>
     </div>
