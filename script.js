@@ -3,13 +3,21 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signO
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB7vOk_E3GjtPWvQ53YQfRbeN16KNJ-UWw",
+
+  apiKey: "AIzaSyB7vOk_E3GjtPWvQ53YQfRbeNl6KNJ-UWw",
+
   authDomain: "ukeplane-26.firebaseapp.com",
+
   projectId: "ukeplane-26",
+
   storageBucket: "ukeplane-26.firebasestorage.app",
+
   messagingSenderId: "789949240576",
+
   appId: "1:789949240576:web:7ee71ff0fbdeaf3778cfe5"
+
 };
+
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -74,3 +82,4 @@ function loadData() {
         });
     });
 }
+
