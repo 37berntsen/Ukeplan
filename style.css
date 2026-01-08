@@ -320,3 +320,27 @@ input[type="text"], select {
     color: #64748b; 
     margin-bottom: 2px; 
 }
+.item-tools {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.item-tools span {
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.item-tools span:hover {
+    transform: scale(1.2);
+}
+
+.custom-modal h3 {
+    margin-top: 0;
+    font-weight: 900;
+}
+
+/* Lærervisning spesifikk */
+#teacherView table {
+    border-color: var(--primary);
+}
