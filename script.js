@@ -34,27 +34,54 @@ window.login = () => signInWithPopup(auth, provider);
 // SIKKER LAGRING SOM OGSÅ TAR MED TIDSPUNKTER
 async function persistData() {
     if (currentTab === 'teacher') return;
-    const plan = store.plans[store.currentPlanId];
     
-    plan.klasse = document.getElementById('labelKlasse').innerText;
-    plan.uke = document.getElementById('labelUke').innerText;
-    
-    // Lagrer redigerte tider fra første kolonne
-    plan.times = Array.from(document.querySelectorAll('.time-cell')).map(td => td.innerText);
-    
-    const newCells = [];
-    document.querySelectorAll('.dropzone').forEach(z => {
-        const ts = Array.from(z.querySelectorAll('.teacher-chip')).map(c => c.firstChild.textContent.trim());
-        newCells.push({ 
-            s: z.querySelector('.subject-display').innerText.trim(), 
-            r: z.querySelector('.room-label').innerText.trim(), 
-            t: ts, 
-            bg: z.style.backgroundColor
-        });
-    });
-    plan.cells = newCells;
+    try {
+        const plan = store.plans[store.currentPlanId];
+        
+        // 1. Vask info-feltene (Sikrer at de aldri er undefined)
+        const klasseNavn = document.getElementById('labelKlasse').innerText.trim() || "Ukjent";
+        const ukeNummer = document.getElementById('labelUke').innerText.trim() || "1";
+        
+        // 2. Vask tidspunktene
+        const tider = Array.from(document.querySelectorAll('.time-cell')).map(td => td.innerText.trim() || "");
 
-    await setDoc(doc(db, "data", "mainStore"), store);
+        // 3. Vask hver eneste celle
+        const vaskedeCeller = [];
+        document.querySelectorAll('.dropzone').forEach(z => {
+            const subject = z.querySelector('.subject-display')?.innerText.trim() || "";
+            const room = z.querySelector('.room-label')?.innerText.trim() || "";
+            const backgroundColor = z.style.backgroundColor || "";
+            
+            // Hent lærere og sikre at det er en liste, aldri undefined
+            const teachers = Array.from(z.querySelectorAll('.teacher-chip')).map(c => {
+                return c.firstChild ? c.firstChild.textContent.trim() : "";
+            }).filter(t => t !== ""); // Fjern tomme lærernavn
+
+            vaskedeCeller.push({
+                s: subject,
+                r: room,
+                t: teachers,
+                bg: backgroundColor
+            });
+        });
+
+        // Oppdater det lokale objektet før sending
+        store.plans[store.currentPlanId] = {
+            ...plan,
+            klasse: klasseNavn,
+            uke: ukeNummer,
+            times: tider,
+            cells: vaskedeCeller
+        };
+
+        // 4. Send til Firebase
+        await setDoc(doc(db, "data", "mainStore"), store);
+        console.log("Lagret suksessfullt til Firebase");
+        
+    } catch (err) {
+        console.error("KRITISK FEIL VED LAGRING:", err);
+        // Her kan du legge til en beskjed til brukeren i grensesnittet
+    }
 }
 
 function loadFromFirebase() {
@@ -161,3 +188,4 @@ function findTeacherCellAcrossPlans(t, sIdx, dIdx) {
 // ... Resten av funksjonene (handleDrop, addItem, removeItem, etc.) forblir som i den velfungerende kopien ...
 window.handleDrop = (td, cellIdx) => { /* Din drag-logikk */ };
 window.persistData = persistData;
+
