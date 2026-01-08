@@ -1,57 +1,103 @@
 :root { --primary: #2563eb; --border: #000; }
-body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f1f5f9; overflow: hidden; color: #000; }
-.app-container { height: 100vh; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; gap: 10px; }
+body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f1f5f9; color: #000; min-height: 100vh; }
 
-/* Dashboard layout */
-.top-nav { background: #fff; padding: 10px 20px; border-radius: 12px; border: 3px solid #000; display: flex; justify-content: space-between; align-items: center; box-shadow: 4px 4px 0px #000; }
-.main-grid { display: grid; grid-template-columns: 280px 1fr 280px; gap: 15px; flex-grow: 1; min-height: 0; overflow: hidden; }
-.panel { background: #fff; border: 3px solid #000; border-radius: 15px; padding: 15px; display: flex; flex-direction: column; box-shadow: 4px 4px 0px #000; height: 100%; box-sizing: border-box; }
-#printArea { background: #fff; border: 3px solid #000; border-radius: 15px; padding: 20px; flex-grow: 1; overflow-y: auto; box-shadow: 4px 4px 0px #000; display: flex; flex-direction: column; }
-
-/* Tabell-design */
-table { width: 100%; border-collapse: collapse; border: 3px solid #000; table-layout: fixed; }
-th, td { border: 2px solid #000; padding: 10px; text-align: center; position: relative; height: 65px; word-wrap: break-word; }
-th { font-size: 16px; font-weight: 900; background: #f8fafc; }
-.time-cell { background: #f8fafc; font-weight: 900; width: 100px; font-size: 15px; }
-.pause-row { background: #f1f5f9; font-weight: 900; font-size: 16px; height: 40px; }
-
-.subject-display { font-weight: 900; text-transform: uppercase; font-size: 16px; line-height: 1.2; }
-.room-label { font-size: 12px; font-weight: 900; margin-top: 4px; }
-.teacher-chip { background: #fff; border: 1.5px solid #000; padding: 2px 6px; font-size: 11px; border-radius: 4px; margin: 2px; font-weight: 900; display: inline-block; }
-
-/* Ikoner og knapper */
-.action-icon { cursor: pointer; color: #000 !important; font-weight: 900; font-size: 16px; }
-.clear-btn { position: absolute; top: 2px; right: 2px; color: #000; cursor: pointer; font-weight: 900; font-size: 16px; }
-.rem-chip { color: #000; font-weight: 900; cursor: pointer; margin-left: 4px; }
-
-/* Info felt */
-.info-row { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
-.info-box { background: #fff; border: 3px solid #000; padding: 10px 40px; border-radius: 15px; text-align: center; box-shadow: 4px 4px 0px #000; }
-.info-box span { display: block; font-size: 12px; font-weight: 900; }
-.info-box strong { font-size: 22px; }
-
-/* Faner */
-.tab-nav { display: flex; justify-content: center; margin-bottom: 15px; }
-.tab { padding: 10px 30px; border: 3px solid #000; border-bottom: none; border-radius: 10px 10px 0 0; cursor: pointer; font-weight: 900; margin: 0 5px; background: #eee; }
-.tab.active { background: #fff; border-bottom: 3px solid #fff; margin-bottom: -3px; }
-
-/* Modaler */
-.custom-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border: 4px solid #000; border-radius: 20px; z-index: 2500; display: none; text-align: center; width: 380px; box-shadow: 10px 10px 0px #000; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 2000; }
-
-/* PDF UTSKRIFT - SKJULER FANER OG LÆRERE */
-@media print {
-    .no-print, .tab-nav, .panel, .top-nav, .rem-chip, .clear-btn { display: none !important; }
-    .main-grid { display: block; }
-    #printArea { border: none !important; box-shadow: none !important; width: 100%; padding: 0; margin: 0; }
-    .teacher-chip { display: none !important; }
-    .info-box { box-shadow: none; border: 2px solid #000; }
+.app-container { 
+    display: flex; 
+    flex-direction: column; 
+    padding: 20px; 
+    gap: 15px; 
+    min-height: 100vh;
 }
 
-.btn { border: 2.5px solid #000; padding: 8px 15px; border-radius: 10px; font-weight: 800; cursor: pointer; }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-success { background: #16a34a; color: #fff; }
-.inp-row { display: flex; gap: 5px; margin-bottom: 15px; }
-.inp-row input { flex-grow: 1; padding: 8px; border: 2px solid #000; border-radius: 8px; }
-.scroll-area { flex-grow: 1; overflow-y: auto; margin-top: 10px; }
-.fag-item, .teacher-item { padding: 10px; margin-bottom: 8px; border: 2px solid #000; border-radius: 10px; font-weight: 800; display: flex; justify-content: space-between; }
+/* Toppmeny */
+.top-nav { 
+    background: #fff; 
+    padding: 10px 25px; 
+    border-radius: 12px; 
+    border: 3px solid #000; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    box-shadow: 4px 4px 0px #000;
+}
+
+/* DASHBOARD LAYOUT - Fikset for full høyde i midten */
+.main-grid { 
+    display: grid; 
+    grid-template-columns: 280px 1fr 280px; 
+    gap: 20px; 
+    align-items: start; /* Hindrer at sidepaneler strekker seg unødvendig */
+}
+
+.panel { 
+    background: #fff; 
+    border: 3px solid #000; 
+    border-radius: 15px; 
+    padding: 15px; 
+    box-shadow: 4px 4px 0px #000;
+    position: sticky; /* Sidepanelene følger med når du scroller ned ukeplanen */
+    top: 20px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#printArea { 
+    background: #fff; 
+    border: 3px solid #000; 
+    border-radius: 15px; 
+    padding: 30px; 
+    box-shadow: 4px 4px 0px #000;
+    min-height: fit-content; /* Sørger for at den tar høyden den trenger */
+    margin-bottom: 50px; /* Padding i bunn */
+}
+
+/* TABELL - STOR OG LESBAR */
+table { width: 100%; border-collapse: collapse; border: 3px solid #000; table-layout: fixed; }
+th, td { border: 2px solid #000; padding: 12px; text-align: center; position: relative; height: 75px; }
+th { font-size: 18px; font-weight: 900; background: #f8fafc; }
+.time-cell { background: #f8fafc; font-weight: 900; width: 110px; font-size: 16px; }
+.pause-row { background: #f1f5f9; font-weight: 900; font-size: 16px; height: 45px; letter-spacing: 2px; }
+
+/* FANER - MED SKILLELINJE */
+.tab-nav { 
+    display: flex; 
+    justify-content: center; 
+    margin-bottom: 25px; 
+    border-bottom: 3px solid #000; /* Linjen som skilte dem ut */
+}
+.tab { 
+    padding: 10px 35px; 
+    border: 3px solid #000; 
+    border-bottom: none; 
+    border-radius: 12px 12px 0 0; 
+    cursor: pointer; 
+    font-weight: 900; 
+    margin: 0 5px; 
+    background: #eee;
+    transition: 0.2s;
+}
+.tab.active { background: #fff; margin-bottom: -3px; position: relative; z-index: 2; }
+
+/* UTSKRIFTSSPESIFIKKE REGLER FOR PDF */
+@media print {
+    @page { size: landscape; margin: 10mm; }
+    body { background: #fff; }
+    .no-print, .tab-nav, .panel, .top-nav, .rem-chip, .clear-btn, .teachers-container { 
+        display: none !important; 
+    }
+    .app-container { padding: 0; display: block; }
+    .main-grid { display: block; }
+    #printArea { 
+        border: none !important; 
+        box-shadow: none !important; 
+        padding: 0 !important; 
+        width: 100% !important;
+    }
+    table { border: 4px solid #000 !important; width: 100% !important; }
+    .info-box { border: 2px solid #000; box-shadow: none; }
+}
+
+/* Ikoner og knapper */
+.action-icon, .clear-btn { color: #000 !important; font-weight: 900; cursor: pointer; }
+.scroll-area { overflow-y: auto; flex-grow: 1; margin-top: 10px; }
