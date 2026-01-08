@@ -2,43 +2,41 @@
 body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f1f5f9; overflow: hidden; color: #000; }
 .app-container { height: 100vh; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; gap: 10px; }
 
-/* TYKKERE RAMMER OG STØRRE TEKST FOR LESBARHET */
+/* DASHBOARD LAYOUT */
+.top-nav { background: #fff; padding: 10px 20px; border-radius: 12px; border: 3px solid #000; display: flex; justify-content: space-between; align-items: center; box-shadow: 4px 4px 0px #000; }
+.main-grid { display: grid; grid-template-columns: 280px 1fr 280px; gap: 15px; flex-grow: 1; overflow: hidden; }
+.panel { background: #fff; border: 3px solid #000; border-radius: 15px; padding: 15px; display: flex; flex-direction: column; box-shadow: 4px 4px 0px #000; }
+#printArea { background: #fff; border: 3px solid #000; border-radius: 15px; padding: 20px; flex-grow: 1; overflow-y: auto; box-shadow: 4px 4px 0px #000; }
+
+/* TABELL - STOR TEKST OG TYKKE RAMMER */
 table { width: 100%; border-collapse: collapse; border: 3px solid #000; table-layout: fixed; }
-th, td { border: 2px solid #000; padding: 10px; text-align: center; position: relative; height: 65px; word-wrap: break-word; }
-th { font-size: 16px; font-weight: 900; background: #f8fafc; }
-.time-cell { background: #f8fafc; font-weight: 900; width: 100px; font-size: 15px; color: #000; }
+th, td { border: 2px solid #000; padding: 10px; text-align: center; position: relative; height: 65px; }
+th { font-size: 16px; font-weight: 900; }
+.time-cell { background: #f8fafc; font-weight: 900; width: 100px; font-size: 15px; }
 .pause-row { background: #f1f5f9; font-weight: 900; font-size: 16px; height: 40px; }
+.subject-display { font-weight: 900; text-transform: uppercase; font-size: 16px; line-height: 1.2; }
+.room-label { font-size: 12px; font-weight: 900; margin-top: 4px; }
+.teacher-chip { background: #fff; border: 1.5px solid #000; padding: 2px 6px; font-size: 11px; border-radius: 4px; margin: 2px; font-weight: 900; display: inline-block; }
 
-.subject-display { font-weight: 900; text-transform: uppercase; font-size: 16px; color: #000; line-height: 1.2; }
-.room-label { font-size: 12px; font-weight: 900; color: #000; margin-top: 4px; }
-.teacher-chip { background: #fff; border: 1.5px solid #000; padding: 2px 6px; font-size: 11px; border-radius: 4px; margin: 2px; font-weight: 900; display: inline-block; color: #000; }
-
-.action-icon { cursor: pointer; color: #000 !important; font-weight: 900; }
+/* IKONER OG KNAPPER */
+.action-icon { cursor: pointer; color: #000 !important; font-weight: 900; font-size: 16px; }
 .clear-btn { position: absolute; top: 2px; right: 2px; color: #000; cursor: pointer; font-weight: 900; font-size: 16px; }
+.btn { border: 2.5px solid #000; padding: 8px 15px; border-radius: 10px; font-weight: 800; cursor: pointer; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-success { background: #16a34a; color: #fff; }
+.btn-danger { background: #ef4444; color: #fff; }
 
-/* INFO BOKSER */
-.info-row { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
-.info-box { background: #fff; border: 3px solid #000; padding: 10px 40px; border-radius: 15px; text-align: center; }
-.info-box span { display: block; font-size: 12px; font-weight: 900; }
-.info-box strong { font-size: 22px; }
-
-/* UTSKRIFTSSPESIFIKKE REGLER */
-@media print {
-    body { background: white; overflow: visible; }
-    .no-print, .tab-nav, .panel, .top-nav, .rem-chip, .clear-btn { display: none !important; }
-    .app-container { padding: 0; margin: 0; display: block; }
-    #mainApp { display: block !important; }
-    .main-grid { display: block; }
-    #printArea { border: none !important; padding: 0 !important; margin: 0 !important; width: 100%; box-shadow: none !important; }
-    table { width: 100% !important; border: 3px solid #000 !important; }
-    .teacher-chip { display: none !important; } /* Skjul lærernavn på utskrift */
-    .info-row { margin-bottom: 10px; }
-    .info-box { border: 2px solid #000; padding: 5px 20px; }
-}
-
-/* MODAL OG ANDRE STILER */
+/* MODAL OG FANER */
 .custom-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border: 4px solid #000; border-radius: 20px; z-index: 2500; display: none; text-align: center; width: 380px; box-shadow: 10px 10px 0px #000; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 2000; }
 .tab-nav { display: flex; justify-content: center; margin-bottom: 15px; }
-.tab { padding: 10px 30px; border: 3px solid #000; border-bottom: none; border-radius: 10px 10px 0 0; cursor: pointer; font-weight: 900; margin: 0 5px; }
+.tab { padding: 10px 30px; border: 3px solid #000; border-bottom: none; border-radius: 10px 10px 0 0; cursor: pointer; font-weight: 900; margin: 0 5px; background: #eee; }
 .tab.active { background: #fff; border-bottom: 3px solid #fff; margin-bottom: -3px; }
+
+/* PDF UTSKRIFT */
+@media print {
+    .no-print, .tab-nav, .panel, .top-nav, .rem-chip, .clear-btn { display: none !important; }
+    .main-grid { display: block; }
+    #printArea { border: none !important; box-shadow: none !important; width: 100%; }
+    .teacher-chip { display: none !important; }
+}
