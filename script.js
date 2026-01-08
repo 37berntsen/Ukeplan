@@ -16,27 +16,35 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Standardmaler basert på din fil
-const slotsTemplate = [{t: "08:30-09:15"}, {t: "09:15-10:00"}, {t: "10:00-10:15", p: "PAUSE"}, {t: "10:15-11:00"}, {t: "11:00-11:45"}, {t: "11:45-12:15", p: "LUNSJ"}, {t: "12:15-13:00"}, {t: "13:00-13:45"}, {t: "13:45-14:00", p: "PAUSE"}, {t: "14:00-14:45"}, {t: "14:45-15:30"}];
+const slotsTemplate = [{t:"08:30-09:15"}, {t:"09:15-10:00"}, {t:"10:00-10:15", p:"PAUSE"}, {t:"10:15-11:00"}, {t:"11:00-11:45"}, {t:"11:45-12:15", p:"LUNSJ"}, {t:"12:15-13:00"}, {t:"13:00-13:45"}, {t:"13:45-14:00", p:"PAUSE"}, {t:"14:00-14:45"}, {t:"14:45-15:30"}];
 
 let store = { 
     currentPlanId: "9A", 
-    globalSubjects: [], 
-    globalTeachers: [], 
-    plans: { "9A": { klasse: "9A", laerer: "", uke: "1", cells: [], times: slotsTemplate.map(s => s.t) } } 
+    subjects: [], 
+    teachers: [], 
+    plans: { "9A": { klasse: "9A", laerer: "", uke: "1", cells: Array(55).fill(null).map(() => ({s:'', r:'', t:[], bg:''})), times: slotsTemplate.map(s => s.t) } } 
 };
 
-let dragData = null;
-let pendingRoomTarget = null;
+let draggedItem = null;
+let pendingCellIdx = null;
 
+// FIREBASE AUTH
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
-        loadFromFirebase();
+        loadData();
     }
 });
 
+function setupApp() {
+    renderTable();
+    updateLists();
+    updatePlanSelector();
+    setupEventListeners();
+}
+
+// RENDER TIMEPLAN
 function renderTable() {
     const plan = store.plans[store.currentPlanId];
     const body = document.getElementById('tableBody');
@@ -46,36 +54,35 @@ function renderTable() {
     slotsTemplate.forEach((slot, i) => {
         const tr = document.createElement('tr');
         
-        // Tid-celle (Redigerbar)
         const tidTd = document.createElement('td');
         tidTd.className = "time-cell";
         tidTd.contentEditable = true;
         tidTd.innerText = plan.times[i] || slot.t;
-        tidTd.onblur = () => { plan.times[i] = tidTd.innerText; saveToFirebase(); };
+        tidTd.onblur = () => { plan.times[i] = tidTd.innerText; save(); };
         tr.appendChild(tidTd);
 
         if (slot.p) {
-            const pauseTd = document.createElement('td');
-            pauseTd.colSpan = 5;
-            pauseTd.className = "pause-row";
-            pauseTd.innerText = slot.p;
-            tr.appendChild(pauseTd);
+            tr.innerHTML += `<td colspan="5" class="pause-row">${slot.p}</td>`;
         } else {
             for (let d = 0; d < 5; d++) {
                 const td = document.createElement('td');
                 td.className = "drop-zone";
-                const cData = plan.cells[cellIdx] || {s:'', r:'', t:[], bg:''};
+                const idx = cellIdx;
+                const cData = plan.cells[idx] || {s:'', r:'', t:[], bg:''};
                 
-                td.style.backgroundColor = cData.bg || '';
+                if (cData.bg) td.style.backgroundColor = cData.bg;
                 td.innerHTML = `
                     <div class="subject-display">${cData.s || ''}</div>
                     <div class="room-label">${cData.r || ''}</div>
-                    <div class="teachers-container">${(cData.t || []).map(t => `<span class="teacher-chip">${t}<span class="remove-chip" onclick="removeTeacherFromCell(this)">✕</span></span>`).join('')}</div>
-                    ${cData.s ? `<span class="delete-btn" onclick="clearCell(this)">✕</span>` : ''}
+                    <div class="teachers-container">${(cData.t || []).map(t => `<span class="t-chip">${t}</span>`).join('')}</div>
+                    ${cData.s ? `<span class="clear-btn">×</span>` : ''}
                 `;
 
+                // Drag and Drop Events
                 td.ondragover = e => e.preventDefault();
-                td.ondrop = () => handleDrop(td, cellIdx);
+                td.ondrop = () => handleDrop(idx);
+                td.querySelector('.clear-btn')?.addEventListener('click', () => { plan.cells[idx] = {s:'', r:'', t:[], bg:''}; save(); });
+                
                 tr.appendChild(td);
                 cellIdx++;
             }
@@ -84,101 +91,84 @@ function renderTable() {
     });
 }
 
-// DRAG AND DROP LOGIKK
-window.handleDrop = (td, idx) => {
-    if (!dragData) return;
-    const plan = store.plans[store.currentPlanId];
-    if (!plan.cells[idx]) plan.cells[idx] = {s:'', r:'', t:[], bg:''};
+// DRAG & DROP LOGIKK
+window.setDrag = (type, text, color = '') => { draggedItem = {type, text, color}; };
 
-    if (dragData.type === 'subject') {
-        pendingRoomTarget = { td, idx };
-        document.getElementById('modalOverlay').style.display = 'block';
+function handleDrop(idx) {
+    if (!draggedItem) return;
+    const plan = store.plans[store.currentPlanId];
+    
+    if (draggedItem.type === 'fag') {
+        pendingCellIdx = idx;
         document.getElementById('roomModal').style.display = 'block';
-    } else if (dragData.type === 'teacher') {
-        if (!plan.cells[idx].t.includes(dragData.text)) {
-            plan.cells[idx].t.push(dragData.text);
-            saveToFirebase();
+    } else if (draggedItem.type === 'teacher') {
+        if (!plan.cells[idx].t.includes(draggedItem.text)) {
+            plan.cells[idx].t.push(draggedItem.text);
+            save();
         }
     }
-};
+}
 
-window.applyRoomChoice = (type) => {
+window.selectRoom = (roomType) => {
     const plan = store.plans[store.currentPlanId];
-    const { td, idx } = pendingRoomTarget;
-    plan.cells[idx].s = dragData.text;
-    plan.cells[idx].bg = dragData.color;
-    plan.cells[idx].r = type; // Primærrom eller Ekstrarom
-    closeModals();
-    saveToFirebase();
+    plan.cells[pendingCellIdx].s = draggedItem.text;
+    plan.cells[pendingCellIdx].bg = draggedItem.color;
+    plan.cells[pendingCellIdx].r = roomType;
+    document.getElementById('roomModal').style.display = 'none';
+    save();
 };
 
-// LISTE-HÅNDTERING (FAG/LÆRER)
-window.addGlobalItem = (type) => {
-    const inp = document.getElementById(type === 'subject' ? 'subInp' : 'teaInp');
-    if (!inp.value) return;
-    if (type === 'subject') {
-        store.globalSubjects.push({n: inp.value, c: document.getElementById('colInp').value});
-    } else {
-        store.globalTeachers.push(inp.value);
+// KLASSESTYRING
+window.addNewClass = () => {
+    const name = prompt("Navn på ny klasse (f.eks. 10B):");
+    if (name && !store.plans[name]) {
+        store.plans[name] = JSON.parse(JSON.stringify(store.plans["9A"]));
+        store.plans[name].klasse = name;
+        store.plans[name].cells = Array(55).fill(null).map(() => ({s:'', r:'', t:[], bg:''}));
+        store.currentPlanId = name;
+        save();
     }
-    inp.value = "";
-    updateLists();
-    saveToFirebase();
+};
+
+function updatePlanSelector() {
+    const sel = document.getElementById('planSelector');
+    sel.innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id === store.currentPlanId ? 'selected' : ''}>${id}</option>`).join('');
+    sel.onchange = (e) => { store.currentPlanId = e.target.value; renderTable(); };
+}
+
+// FAG & LÆRER LISTER
+window.addItem = (type) => {
+    const val = document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value;
+    if (!val) return;
+    if (type === 'fag') store.subjects.push({n: val, c: document.getElementById('colInp').value});
+    else store.teachers.push(val);
+    save();
 };
 
 function updateLists() {
-    const sList = document.getElementById('subjectsList');
-    sList.innerHTML = store.globalSubjects.map((s, i) => `
-        <div class="fag-item" draggable="true" style="background:${s.c}" 
-             ondragstart="setDragData('subject', '${s.n}', '${s.c}')">
-            ${s.n} <span class="delete-btn" onclick="removeGlobal('subject', ${i})">✕</span>
-        </div>`).join('');
-
-    const tList = document.getElementById('teachersList');
-    tList.innerHTML = store.globalTeachers.map((t, i) => `
-        <div class="teacher-item" draggable="true" 
-             ondragstart="setDragData('teacher', '${t}')">
-            ${t} <span class="delete-btn" onclick="removeGlobal('teacher', ${i})">✕</span>
-        </div>`).join('');
+    document.getElementById('subjectsList').innerHTML = store.subjects.map(s => `
+        <div class="item fag-item" draggable="true" style="background:${s.c}" ondragstart="setDrag('fag','${s.n}','${s.c}')">${s.n}</div>`).join('');
+    document.getElementById('teachersList').innerHTML = store.teachers.map(t => `
+        <div class="item teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')">${t}</div>`).join('');
 }
 
-window.setDragData = (type, text, color = '') => { dragData = {type, text, color}; };
-window.closeModals = () => { 
-    document.getElementById('modalOverlay').style.display = 'none'; 
-    document.getElementById('roomModal').style.display = 'none'; 
-};
-
-window.clearCell = (btn) => {
-    const td = btn.closest('.drop-zone');
-    const allZones = Array.from(document.querySelectorAll('.drop-zone'));
-    const idx = allZones.indexOf(td);
-    store.plans[store.currentPlanId].cells[idx] = {s:'', r:'', t:[], bg:''};
-    saveToFirebase();
-};
-
-// FIREBASE SYNCHRONIZATION
-async function saveToFirebase() {
+// FIREBASE KONTROLL
+async function save() {
     await setDoc(doc(db, "data", "mainStore"), store);
 }
 
-function loadFromFirebase() {
+function loadData() {
     onSnapshot(doc(db, "data", "mainStore"), (doc) => {
         if (doc.exists()) {
             store = doc.data();
-            renderTable();
-            updateLists();
+            setupApp();
         }
     });
 }
 
-// PDF EKSPORT
-document.getElementById('pdfBtn').onclick = () => {
-    const element = document.getElementById('printArea');
-    html2pdf().set({ 
-        margin: 10, 
-        filename: `Ukeplan_${store.currentPlanId}.pdf`, 
-        jsPDF: { orientation: 'landscape' } 
-    }).from(element).save();
-};
-
-document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
+function setupEventListeners() {
+    document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
+    document.getElementById('addFagBtn').onclick = () => addItem('fag');
+    document.getElementById('addTeaBtn').onclick = () => addItem('teacher');
+    document.getElementById('newPlanBtn').onclick = addNewClass;
+}
