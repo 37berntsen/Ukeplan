@@ -16,7 +16,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Standardoppsett som garanterer innhold
 const defaultSubjects = [
     {n: "Norsk", c: "#fecaca", r: false}, {n: "Matematikk", c: "#bbf7d0", r: false}, 
     {n: "Engelsk", c: "#bfdbfe", r: false}, {n: "Samfunnsfag", c: "#ffedd5", r: false}, 
@@ -36,20 +35,19 @@ let store = {
 
 let dragData = null, pendingRoomTarget = null, copyTarget = null;
 
-// GJØR FUNKSJONER GLOBALE SLIK AT HTML SER DEM
 window.login = () => signInWithPopup(auth, provider);
 
 window.addItem = (type) => {
-    // SIKRING: Sørger for at listene eksisterer før vi pusher til dem
-    if (!store.globalSubjects) store.globalSubjects = [...defaultSubjects];
-    if (!store.globalTeachers) store.globalTeachers = [];
-
     const val = document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value;
     if (!val) return;
-    if (type === 'fag') store.globalSubjects.push({n: val, c: document.getElementById('colInp').value, r: true});
+    if (type === 'fag') store.globalSubjects.push({n: val, c: document.getElementById('colInp').value, r: false});
     else store.globalTeachers.push(val);
-    
     document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value = "";
+    save();
+};
+
+window.toggleRoomRequirement = (i) => {
+    store.globalSubjects[i].r = !store.globalSubjects[i].r;
     save();
 };
 
@@ -59,17 +57,31 @@ window.removeItem = (type, i) => {
     save();
 };
 
-window.addNewClass = () => {
-    const name = prompt("Navn på ny klasse:");
-    if (name) {
-        store.plans[name] = { klasse: name, uke: "1", cells: {}, times: slotsTemplate.map(s => s.t) };
-        store.currentPlanId = name;
-        save();
-    }
-};
-
 window.setDrag = (type, text, color = '', needsRoom = false) => {
     dragData = {type, text, color, needsRoom};
+};
+
+window.handleDrop = (td, cellId, x, y) => {
+    if (!dragData) return;
+    const plan = store.plans[store.currentPlanId];
+    
+    if (dragData.type === 'subject') {
+        if (dragData.needsRoom) {
+            pendingRoomTarget = cellId;
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById('roomModal').style.display = 'block';
+        } else {
+            plan.cells[cellId] = { ...plan.cells[cellId], s: dragData.text, bg: dragData.color, r: 'Primærrom' };
+            save();
+        }
+    } else if (dragData.type === 'teacher') {
+        if (!plan.cells[cellId]) plan.cells[cellId] = {s:'', t:[], bg:'', r:''};
+        if (!plan.cells[cellId].t.includes(dragData.text)) {
+            plan.cells[cellId].t.push(dragData.text);
+            save();
+            checkForDoubleHour(cellId, dragData.text, x, y);
+        }
+    }
 };
 
 window.applyRoomChoice = (room) => {
@@ -77,11 +89,6 @@ window.applyRoomChoice = (room) => {
     plan.cells[pendingRoomTarget] = { ...plan.cells[pendingRoomTarget], s: dragData.text, bg: dragData.color, r: room };
     closeModals();
     save();
-};
-
-window.closeModals = () => {
-    document.getElementById('modalOverlay').style.display = 'none';
-    document.getElementById('roomModal').style.display = 'none';
 };
 
 window.clearCell = (id) => {
@@ -95,68 +102,8 @@ window.removeTeacherFromCell = (id, t) => {
     save();
 };
 
-window.setTab = (t) => {
-    document.getElementById('classView').style.display = t === 'class' ? 'block' : 'none';
-    document.getElementById('teacherView').style.display = t === 'teacher' ? 'block' : 'none';
-    document.getElementById('tabClass').className = t === 'class' ? 'tab active' : 'tab';
-    document.getElementById('tabTeacher').className = t === 'teacher' ? 'tab active' : 'tab';
-};
-
-window.confirmCopy = () => {
-    const plan = store.plans[store.currentPlanId];
-    if (!plan.cells[copyTarget.cellId]) plan.cells[copyTarget.cellId] = {s:'', t:[], bg:'', r:''};
-    if (!plan.cells[copyTarget.cellId].t.includes(copyTarget.teacher)) {
-        plan.cells[copyTarget.cellId].t.push(copyTarget.teacher);
-        save();
-    }
-    document.getElementById('copyPrompt').style.display = "none";
-};
-
-// FIREBASE OG RENDERING
-async function save() { 
-    await setDoc(doc(db, "data", "mainStore"), store); 
-}
-
-function handleDrop(td, cellId, x, y) {
-    if (!dragData) return;
-    const plan = store.plans[store.currentPlanId];
-    if (dragData.type === 'subject') {
-        pendingRoomTarget = cellId;
-        document.getElementById('modalOverlay').style.display = 'block';
-        document.getElementById('roomModal').style.display = 'block';
-    } else {
-        if (!plan.cells[cellId]) plan.cells[cellId] = {s:'', t:[], bg:'', r:''};
-        if (!plan.cells[cellId].t.includes(dragData.text)) {
-            plan.cells[cellId].t.push(dragData.text);
-            save();
-            checkForDoubleHour(cellId, dragData.text, x, y);
-        }
-    }
-}
-
-function checkForDoubleHour(cellId, teacherName, x, y) {
-    const [row, col] = cellId.split('-').map(Number);
-    let nextRow = row + 1;
-    if ([2, 5, 8].includes(nextRow)) nextRow++;
-    
-    const nextCellId = `${nextRow}-${col}`;
-    if (document.getElementById(nextCellId)) {
-        const plan = store.plans[store.currentPlanId];
-        if (plan.cells[cellId]?.s === plan.cells[nextCellId]?.s && plan.cells[cellId]?.s !== "") {
-            const prompt = document.getElementById('copyPrompt');
-            prompt.style.left = x + "px"; prompt.style.top = (y + 20) + "px";
-            prompt.style.display = "block";
-            copyTarget = { cellId: nextCellId, teacher: teacherName };
-            setTimeout(() => { prompt.style.display = "none"; }, 5000);
-        }
-    }
-}
-
 function renderTable() {
-    // SIKRING: Initialiserer lister hvis de mangler i Firebase-dataen
     if (!store.globalSubjects) store.globalSubjects = [...defaultSubjects];
-    if (!store.globalTeachers) store.globalTeachers = [];
-
     const plan = store.plans[store.currentPlanId];
     const body = document.getElementById('tableBody');
     body.innerHTML = "";
@@ -165,9 +112,7 @@ function renderTable() {
         const tr = document.createElement('tr');
         const tidTd = document.createElement('td');
         tidTd.className = "time-cell";
-        tidTd.contentEditable = true;
         tidTd.innerText = plan.times[i] || slot.t;
-        tidTd.onblur = () => { plan.times[i] = tidTd.innerText; save(); };
         tr.appendChild(tidTd);
 
         if (slot.p) tr.innerHTML += `<td colspan="5" class="pause-row" style="background:#f1f5f9; font-weight:900;">${slot.p}</td>`;
@@ -194,28 +139,29 @@ function renderTable() {
         body.appendChild(tr);
     });
     
-    // Oppdaterer listene i grensesnittet
+    // Oppdaterer listene med redigeringsfunksjon
     document.getElementById('subjectsList').innerHTML = store.globalSubjects.map((s, i) => `
-        <div class="fag-item" draggable="true" ondragstart="setDrag('subject','${s.n}','${s.c}',${s.r})" style="background:${s.c}; padding:10px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between;">
-            ${s.n} <span onclick="removeItem('sub',${i})" style="cursor:pointer;">✕</span>
+        <div class="fag-item" draggable="true" ondragstart="setDrag('subject','${s.n}','${s.c}',${s.r})" style="background:${s.c}; padding:8px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between; align-items:center;">
+            <span>${s.n}</span>
+            <div style="display:flex; gap:8px;">
+                <span onclick="toggleRoomRequirement(${i})" style="cursor:pointer; opacity:${s.r?1:0.3};" title="Krever romvalg">🏠</span>
+                <span onclick="removeItem('sub',${i})" style="cursor:pointer; color:red;">✕</span>
+            </div>
         </div>`).join('');
     
     document.getElementById('teachersList').innerHTML = store.globalTeachers.map((t, i) => `
-        <div class="teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')" style="padding:10px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between;">
-            ${t} <span onclick="removeItem('tea',${i})" style="cursor:pointer;">✕</span>
+        <div class="teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')" style="padding:8px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between;">
+            ${t} <span onclick="removeItem('tea',${i})" style="cursor:pointer; color:red;">✕</span>
         </div>`).join('');
 
     const sel = document.getElementById('planSelector');
     sel.innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id === store.currentPlanId ? 'selected' : ''}>${id}</option>`).join('');
-    sel.onchange = (e) => { store.currentPlanId = e.target.value; renderTable(); };
 }
 
-function loadFromFirebase() {
-    onSnapshot(doc(db, "data", "mainStore"), (d) => {
-        if(d.exists()) { store = d.data(); renderTable(); }
-        else { renderTable(); } // Tegner tabell selv om ingen data finnes i skyen ennå
-    });
-}
+async function save() { await setDoc(doc(db, "data", "mainStore"), store); }
+function loadFromFirebase() { onSnapshot(doc(db, "data", "mainStore"), (d) => { if(d.exists()) { store = d.data(); renderTable(); } }); }
+function closeModals() { document.getElementById('modalOverlay').style.display = 'none'; document.getElementById('roomModal').style.display = 'none'; }
+window.closeModals = closeModals;
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
