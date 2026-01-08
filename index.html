@@ -7,45 +7,41 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-    <div id="loginOverlay">
-        <div style="background:#fff; padding:50px; border:4px solid #000; border-radius:20px; text-align:center; box-shadow:10px 10px 0px #000;">
-            <h1 style="margin-top:0; color:#2563eb;">MIDTSTUEN</h1>
-            <button onclick="login()" class="btn btn-primary" style="padding:15px 40px; font-size:18px;">Logg inn med Google</button>
+    <div id="loginOverlay" style="position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:20000;">
+        <div style="text-align:center;">
+            <h1 style="color:#2563eb; font-size:3rem; margin-bottom:30px;">MIDTSTUEN</h1>
+            <button onclick="login()" style="padding:15px 40px; border:3px solid #000; border-radius:10px; font-weight:900; cursor:pointer; font-size:1.2rem; background:#fff; box-shadow:4px 4px 0px #000;">Logg inn med Google</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeModals()"></div>
 
     <div id="roomModal" class="custom-modal">
-        <h3 id="modalSubjectTitle">Romvalg</h3>
+        <h3>Velg rom</h3>
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn btn-primary" style="flex:1" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
-            <button class="btn btn-success" style="flex:1" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
+            <button onclick="applyRoomChoice('Primærrom')" style="flex:1; padding:10px; border:3px solid #000; border-radius:8px; font-weight:900; background:#2563eb; color:#fff;">Primærrom</button>
+            <button onclick="applyRoomChoice('Ekstrarom')" style="flex:1; padding:10px; border:3px solid #000; border-radius:8px; font-weight:900; background:#16a34a; color:#fff;">Ekstrarom</button>
         </div>
     </div>
 
     <div id="editSubjectModal" class="custom-modal">
         <h3>Rediger Fag</h3>
         <div style="text-align:left; margin:20px 0;">
-            <label>Navn: <input type="text" id="editSubName" class="btn" style="width:100%; margin-bottom:15px;"></label>
-            <label>Farge: <input type="color" id="editSubColor" style="width:100%; height:40px; border:none;"></label>
-            <label style="display:flex; align-items:center; gap:10px; margin-top:15px;">
-                <input type="checkbox" id="editSubNeedsRoom"> Krever romvalg
-            </label>
+            <label>Navn: <input type="text" id="editSubName" style="width:100%; padding:8px; margin-bottom:15px; border:2px solid #000; border-radius:8px;"></label>
+            <label>Farge: <input type="color" id="editSubColor" style="width:100%; height:40px; border:2px solid #000; border-radius:8px;"></label>
+            <label style="display:flex; align-items:center; gap:10px; margin-top:15px;"><input type="checkbox" id="editSubNeedsRoom"> Krever romvalg</label>
         </div>
-        <button class="btn btn-success" style="width:100%" onclick="saveSubjectEdit()">Lagre</button>
+        <button onclick="saveSubjectEdit()" style="width:100%; padding:10px; background:#16a34a; color:white; border:3px solid #000; border-radius:8px; font-weight:900; cursor:pointer;">Lagre</button>
     </div>
 
     <div class="app-container" id="mainApp" style="display:none;">
         <header class="top-nav no-print">
             <div class="nav-group">
-                <span class="logo">Midtstuen</span>
-                <select id="planSelector" onchange="switchPlan()"></select>
-                <button class="btn btn-primary" onclick="addNewClass()">+ Ny Klasse</button>
+                <span style="font-size:1.5rem; font-weight:900; color:#2563eb;">Midtstuen</span>
+                <select id="planSelector" onchange="switchPlan()" style="padding:8px; border:2px solid #000; border-radius:8px; font-weight:900;"></select>
+                <button onclick="addNewClass()" style="padding:8px 15px; background:#2563eb; color:white; border:2px solid #000; border-radius:8px; font-weight:900; cursor:pointer;">+ Ny Klasse</button>
             </div>
-            <div class="nav-group">
-                <button class="btn btn-success" onclick="window.print()">LAG PDF</button>
-            </div>
+            <button onclick="window.print()" style="padding:8px 15px; background:#16a34a; color:white; border:2px solid #000; border-radius:8px; font-weight:900; cursor:pointer;">LAG PDF</button>
         </header>
 
         <div class="main-grid">
@@ -54,7 +50,7 @@
                 <div style="display:flex; gap:5px; margin-bottom:15px;">
                     <input type="color" id="colInp" value="#bfdbfe" style="width:40px; height:40px; border:none; background:none;">
                     <input type="text" id="subInp" placeholder="Navn" style="flex:1; padding:8px; border:2px solid #000; border-radius:8px;">
-                    <button class="btn btn-primary" onclick="addItem('fag')">+</button>
+                    <button onclick="addItem('fag')" style="padding:8px 15px; background:#2563eb; color:white; border:2px solid #000; border-radius:8px; font-weight:900;">+</button>
                 </div>
                 <div id="subjectsList" class="scroll-area"></div>
             </aside>
@@ -66,7 +62,7 @@
                 </nav>
                 <div class="fane-container">
                     <div class="fane-box"><span class="fane-label">KLASSE</span><div class="fane-content" id="labelKlasse" contenteditable="true" onblur="persistData()">9A</div></div>
-                    <select id="teacherViewSelector" class="btn" style="display:none; font-size:20px; font-weight:900;" onchange="setTab('teacher')"></select>
+                    <select id="teacherViewSelector" class="no-print" style="display:none; font-size:20px; font-weight:900; padding:10px; border:3px solid #000; border-radius:12px;" onchange="renderTableByTab()"></select>
                     <div class="fane-box"><span class="fane-label">UKE</span><div class="fane-content" id="labelUke" contenteditable="true" onblur="persistData()">1</div></div>
                 </div>
                 <table>
@@ -79,7 +75,7 @@
                 <h3>Lærere</h3>
                 <div style="display:flex; gap:5px; margin-bottom:15px;">
                     <input type="text" id="teaInp" placeholder="Navn" style="flex:1; padding:8px; border:2px solid #000; border-radius:8px;">
-                    <button class="btn btn-primary" onclick="addItem('teacher')">+</button>
+                    <button onclick="addItem('teacher')" style="padding:8px 15px; background:#2563eb; color:white; border:2px solid #000; border-radius:8px; font-weight:900;">+</button>
                 </div>
                 <div id="teachersList" class="scroll-area"></div>
             </aside>
