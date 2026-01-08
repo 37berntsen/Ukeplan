@@ -16,135 +16,206 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-const defaultSubjects = [
-    {n: "Norsk", c: "#fecaca", r: false}, {n: "Matematikk", c: "#bbf7d0", r: false}, 
-    {n: "Engelsk", c: "#bfdbfe", r: false}, {n: "Samfunnsfag", c: "#ffedd5", r: false}, 
-    {n: "Naturfag", c: "#ccfbf1", r: false}, {n: "KRLE", c: "#fef9c3", r: false}
-];
+const hardcodedTeachers = ["Tiril Engemoen Aasland", "Ola Eieland Abrahamsen", "Frode Andersen", "Petter Brun Andersen", "Netsanet Leyew Anley", "Nicolas Charles Sylvest Battersby", "Ingerid Kristine Berge", "Kristoffer Berntsen", "Malene Emilia Berstad", "Emilie Louise Bjelland-Ibenfeldt", "Tony Danielsen"];
+const hardcodedSubjects = [{n: "Norsk", c: "#fecaca", r: false}, {n: "Matematikk", c: "#bbf7d0", r: false}, {n: "Engelsk", c: "#bfdbfe", r: false}, {n: "Samfunnsfag", c: "#ffedd5", r: false}, {n: "Naturfag", c: "#ccfbf1", r: true}, {n: "KRLE", c: "#fef9c3", r: false}, {n: "Kroppsøving", c: "#e9d5ff", r: true}, {n: "Kunst & Håndverk", c: "#fbcfe8", r: true}];
+const slotsTemplate = [{t: "08:30-09:15"}, {t: "09:15-10:00"}, {t: "10:00-10:15", p: "PAUSE"}, {t: "10:15-11:00"}, {t: "11:00-11:45"}, {t: "11:45-12:15", p: "LUNSJ"}, {t: "12:15-13:00"}, {t: "13:00-13:45"}, {t: "13:45-14:00", p: "PAUSE"}, {t: "14:00-14:45"}, {t: "14:45-15:30"}];
 
-const slotsTemplate = [{t:"08:30-09:15"},{t:"09:15-10:00"},{t:"10:00-10:15",p:"PAUSE"},{t:"10:15-11:00"},{t:"11:00-11:45"},{t:"11:45-12:15",p:"LUNSJ"},{t:"12:15-13:00"},{t:"13:00-13:45"},{t:"13:45-14:00",p:"PAUSE"},{t:"14:00-14:45"},{t:"14:45-15:30"}];
+let currentTab = 'class', dragData = null, pendingRoomTarget = null, copyTarget = null, editingSubIndex = null;
+let store = { currentPlanId: "9A", globalSubjects: [...hardcodedSubjects], globalTeachers: [...hardcodedTeachers], plans: { "9A": { klasse: "9A", laerer: "", uke: "1", cells: [] } } };
 
-let store = { 
-    currentPlanId: "9A", 
-    globalSubjects: [...defaultSubjects], 
-    globalTeachers: [], 
-    plans: { "9A": { klasse: "9A", uke: "1", cells: {}, times: slotsTemplate.map(s => s.t) } } 
-};
-
-let dragData = null, pendingRoomTarget = null, editingSubjectIdx = null;
-
+// AUTH LOGIKK
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         loadFromFirebase();
+    } else {
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
     }
 });
 
 window.login = () => signInWithPopup(auth, provider);
 
-window.renderTable = (view = 'class', filterTeacher = null) => {
+// FIREBASE SYNKRONISERING
+async function persistData() {
+    if(currentTab === 'teacher') return;
     const plan = store.plans[store.currentPlanId];
-    const body = view === 'class' ? document.getElementById('tableBody') : document.getElementById('teacherTableBody');
-    body.innerHTML = "";
-    
-    document.getElementById('labelKlasse').innerText = plan.klasse || store.currentPlanId;
-    document.getElementById('labelUke').innerText = plan.uke || "1";
+    plan.klasse = document.getElementById('labelKlasse').innerText;
+    plan.laerer = document.getElementById('labelLaerer').innerText;
+    plan.uke = document.getElementById('labelUke').innerText;
+    plan.cells = [];
+    document.querySelectorAll('.dropzone').forEach(z => {
+        const ts = Array.from(z.querySelectorAll('.teacher-chip')).map(c => c.firstChild.textContent);
+        plan.cells.push({ s: z.querySelector('.subject-display').innerText, r: z.querySelector('.room-label').innerText, t: ts, bg: z.style.backgroundColor });
+    });
+    await setDoc(doc(db, "data", "mainStore"), store);
+}
 
+function loadFromFirebase() {
+    onSnapshot(doc(db, "data", "mainStore"), (d) => {
+        if(d.exists()) {
+            store = d.data();
+            renderGlobalLists();
+            renderPlanSelector();
+            loadPlan(store.currentPlanId);
+        }
+    });
+}
+
+// RENDERING LOGIKK (FRA DIN FIL)
+window.loadPlan = (id) => {
+    if(!store.plans[id]) return;
+    store.currentPlanId = id; const plan = store.plans[id];
+    document.getElementById('labelKlasse').innerText = plan.klasse || id;
+    document.getElementById('labelLaerer').innerText = plan.laerer || "";
+    document.getElementById('labelUke').innerText = plan.uke || "1";
+    const tbody = document.getElementById('tableBody'); tbody.innerHTML = "";
+    let cellIdx = 0;
     slotsTemplate.forEach((slot, i) => {
         const tr = document.createElement('tr');
-        const tidTd = document.createElement('td');
-        tidTd.className = "time-cell";
-        tidTd.contentEditable = (view === 'class');
-        tidTd.innerText = plan.times ? (plan.times[i] || slot.t) : slot.t;
-        tidTd.onblur = () => { if(!plan.times) plan.times = slotsTemplate.map(s=>s.t); plan.times[i] = tidTd.innerText; save(); };
-        tr.appendChild(tidTd);
-
-        if (slot.p) {
-            tr.innerHTML += `<td colspan="5" class="pause-row">${slot.p}</td>`;
-        } else {
-            for (let d = 0; d < 5; d++) {
-                const td = document.createElement('td');
-                const cellId = `${i}-${d}`;
-                const saved = plan.cells[cellId] || {s:'', t:[], bg:'', r:''};
-                
-                if (view === 'teacher' && filterTeacher && (!saved.t || !saved.t.includes(filterTeacher))) {
-                    td.style.backgroundColor = 'transparent';
-                } else {
-                    td.className = "dropzone";
-                    td.style.backgroundColor = saved.bg;
-                    const rDisp = (saved.r && saved.r !== "Primærrom") ? `<div class="room-label">${saved.r}</div>` : '';
-                    td.innerHTML = `
-                        <div class="subject-display">${saved.s}</div>
-                        ${rDisp}
-                        <div class="teachers-container">
-                            ${(saved.t || []).map(t => `<span class="teacher-chip">${t}<span class="rem-chip no-print" onclick="removeTeacherFromCell('${cellId}', '${t}')">✕</span></span>`).join('')}
-                        </div>
-                        ${saved.s ? `<span class="clear-btn no-print" onclick="clearCell('${cellId}')">✕</span>` : ''}
-                    `;
-                    td.ondragover = e => e.preventDefault();
-                    td.ondrop = () => handleDrop(cellId);
-                }
-                tr.appendChild(td);
+        tr.innerHTML = `<td class="time-cell">${slot.t}</td>`;
+        if(slot.p) tr.innerHTML += `<td colspan="5" style="background:#f1f5f9; font-weight:900;">${slot.p}</td>`;
+        else {
+            for(let j=0; j<5; j++) {
+                const td = document.createElement('td'); td.className = "dropzone";
+                const saved = (plan.cells && plan.cells[cellIdx]) ? plan.cells[cellIdx] : {s:'', t:[], bg:'', r:''};
+                td.style.backgroundColor = saved.bg || '';
+                let tHtml = (saved.t || []).map(t => `<span class="teacher-chip">${t}<span class="remove-chip no-print" onclick="removeTeacher(this)">✕</span></span>`).join('');
+                td.innerHTML = `<div class="subject-display">${saved.s || ''}</div><div class="room-label">${saved.r || ''}</div><div class="teachers-container">${tHtml}</div>${saved.s ? '<span class="clear-btn no-print" onclick="clearSubject(this)">✕</span>' : ''}`;
+                tr.appendChild(td); cellIdx++;
             }
         }
-        body.appendChild(tr);
+        tbody.appendChild(tr);
     });
-    updateGlobalLists();
-    updatePlanSelector();
+}
+
+// DRAG & DROP LOGIKK (FRA DIN FIL)
+window.setupDragEvents = () => {
+    document.addEventListener('dragover', e => { if(e.target.closest('.dropzone')) e.preventDefault(); });
+    document.addEventListener('drop', e => {
+        const z = e.target.closest('.dropzone');
+        if(z && dragData && currentTab === 'class') {
+            if(dragData.type === 'subject') {
+                if(dragData.needsRoom) {
+                    pendingRoomTarget = z;
+                    document.getElementById('modalOverlay').style.display = 'block';
+                    document.getElementById('roomModal').style.display = 'block';
+                } else updateCellSubject(z, dragData.text, dragData.color, "");
+            } else {
+                addTeacherToCell(z, dragData.text);
+                checkForDoubleHour(z, dragData.text, e.clientX, e.clientY);
+            }
+            persistData();
+        }
+    });
+}
+
+// HJELPEFUNKSJONER
+window.setTab = (type) => {
+    currentTab = type;
+    document.getElementById('tabClass').classList.toggle('active', type === 'class');
+    document.getElementById('tabTeacher').classList.toggle('active', type === 'teacher');
+    document.getElementById('labelLaerer').parentElement.style.display = type === 'class' ? 'block' : 'none';
+    document.getElementById('teacherViewSelector').style.display = type === 'teacher' ? 'inline-block' : 'none';
+    if(type === 'class') loadPlan(store.currentPlanId);
+    else { populateTeacherSelector(); renderTeacherSchedule(); }
 };
 
-function handleDrop(cellId) {
-    if (!dragData) return;
-    const plan = store.plans[store.currentPlanId];
-    if (!plan.cells[cellId]) plan.cells[cellId] = {s:'', t:[], bg:'', r:''};
+window.applyRoomChoice = (r) => { updateCellSubject(pendingRoomTarget, dragData.text, dragData.color, r); closeModals(); };
+window.updateCellSubject = (z, sub, col, room) => { 
+    z.querySelector('.subject-display').innerText = sub; 
+    z.querySelector('.room-label').innerText = room; 
+    z.style.backgroundColor = col; 
+    persistData(); 
+};
+window.closeModals = () => { document.getElementById('modalOverlay').style.display = 'none'; document.getElementById('roomModal').style.display = 'none'; document.getElementById('editSubjectModal').style.display = 'none'; };
+window.clearSubject = (btn) => { const td = btn.closest('.dropzone'); td.querySelector('.subject-display').innerText = ""; td.querySelector('.room-label').innerText = ""; td.querySelector('.teachers-container').innerHTML = ""; td.style.backgroundColor = ""; persistData(); };
+window.removeTeacher = (btn) => { btn.parentElement.remove(); persistData(); };
+window.addGlobalItem = (type) => {
+    const inp = document.getElementById(type === 'subject' ? 'subInp' : 'teaInp');
+    if(!inp.value) return;
+    if(type === 'teacher') { if(!store.globalTeachers.includes(inp.value)) store.globalTeachers.push(inp.value); }
+    else { store.globalSubjects.push({n: inp.value, c: document.getElementById('colInp').value, r: false}); }
+    inp.value = ""; renderGlobalLists(); persistData();
+};
+window.removeItemFromList = (type, name) => {
+    if(type === 'teacher') store.globalTeachers = store.globalTeachers.filter(t => t !== name);
+    else store.globalSubjects = store.globalSubjects.filter(s => s.n !== name);
+    renderGlobalLists(); persistData();
+};
 
-    if (dragData.type === 'subject') {
-        if (dragData.needsRoom) {
-            pendingRoomTarget = cellId;
-            document.getElementById('modalOverlay').style.display = 'block';
-            document.getElementById('roomModal').style.display = 'block';
-        } else {
-            plan.cells[cellId] = { ...plan.cells[cellId], s: dragData.text, bg: dragData.color, r: 'Primærrom' };
-            save();
-        }
-    } else {
-        if (!plan.cells[cellId].t) plan.cells[cellId].t = [];
-        if (!plan.cells[cellId].t.includes(dragData.text)) {
-            plan.cells[cellId].t.push(dragData.text);
-            save();
+// INITIALISERING
+function renderGlobalLists() {
+    const sL = document.getElementById('subjectsList'), tL = document.getElementById('teachersList');
+    sL.innerHTML = ""; tL.innerHTML = "";
+    store.globalSubjects.forEach((s, idx) => {
+        const div = document.createElement('div'); div.className = 'item'; div.draggable = true;
+        div.ondragstart = () => { dragData = { type: 'subject', text: s.n, color: s.c, needsRoom: s.r }; };
+        div.innerHTML = `<div class="color-preview" style="background:${s.c}"></div><span>${s.n}</span><div class="item-actions"><span class="action-btn" onclick="openEditSubject(${idx})">✎</span><span class="action-btn" onclick="removeItemFromList('subject','${s.n}')">✕</span></div>`;
+        sL.appendChild(div);
+    });
+    store.globalTeachers.sort().forEach(t => {
+        const div = document.createElement('div'); div.className = 'item'; div.draggable = true;
+        div.ondragstart = () => { dragData = { type: 'teacher', text: t }; };
+        div.innerHTML = `<span>👤 ${t}</span><span class="action-btn" onclick="removeItemFromList('teacher','${t}')">✕</span>`;
+        tL.appendChild(div);
+    });
+}
+
+window.openEditSubject = (idx) => {
+    editingSubIndex = idx; const s = store.globalSubjects[idx];
+    document.getElementById('editSubName').value = s.n;
+    document.getElementById('editSubColor').value = s.c;
+    document.getElementById('editSubNeedsRoom').checked = s.r;
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.getElementById('editSubjectModal').style.display = 'block';
+};
+
+window.saveSubjectEdit = () => {
+    store.globalSubjects[editingSubIndex] = { n: document.getElementById('editSubName').value, c: document.getElementById('editSubColor').value, r: document.getElementById('editSubNeedsRoom').checked };
+    closeModals(); renderGlobalLists(); persistData();
+};
+
+window.renderPlanSelector = () => {
+    const sel = document.getElementById('planSelector'); sel.innerHTML = "";
+    Object.keys(store.plans).forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.textContent = id; if(id === store.currentPlanId) opt.selected = true; sel.appendChild(opt); });
+};
+
+window.switchPlan = () => { loadPlan(document.getElementById('planSelector').value); };
+window.createNewPlan = () => { const n = prompt("Klassenavn:"); if(n) { store.plans[n] = { klasse: n, laerer: "", uke: "1", cells: [] }; renderPlanSelector(); loadPlan(n); persistData(); } };
+
+// EXCEL OG ANDRE FUNKSJONER (FRA DIN FIL)
+window.handleExcelImport = (input) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
+        rows.forEach(row => { if(row[0] && row[1]) { const full = row[0].toString().trim() + " " + row[1].toString().trim(); if(!store.globalTeachers.includes(full)) store.globalTeachers.push(full); } });
+        renderGlobalLists(); persistData();
+    };
+    reader.readAsArrayBuffer(input.files[0]);
+};
+
+function addTeacherToCell(z, n) { const cont = z.querySelector('.teachers-container'); if(!Array.from(cont.querySelectorAll('.teacher-chip')).some(c => c.firstChild.textContent === n)) cont.insertAdjacentHTML('beforeend', `<span class="teacher-chip">${n}<span class="remove-chip no-print" onclick="removeTeacher(this)">✕</span></span>`); }
+function checkForDoubleHour(cell, name, x, y) {
+    const dropzones = Array.from(document.querySelectorAll('.dropzone'));
+    const idx = dropzones.indexOf(cell);
+    const nextIdx = idx + 5;
+    if(dropzones[nextIdx]) {
+        const curSub = cell.querySelector('.subject-display').innerText;
+        const nextSub = dropzones[nextIdx].querySelector('.subject-display').innerText;
+        if(curSub !== "" && curSub === nextSub) {
+            const prompt = document.getElementById('copyPrompt');
+            prompt.style.left = x + "px"; prompt.style.top = (y + 20) + "px";
+            prompt.style.display = "block";
+            copyTarget = { cell: dropzones[nextIdx], name: name };
+            setTimeout(() => { prompt.style.display = "none"; }, 5000);
         }
     }
 }
+window.confirmCopy = () => { if(copyTarget) { addTeacherToCell(copyTarget.cell, copyTarget.name); document.getElementById('copyPrompt').style.display = "none"; persistData(); } };
+window.generatePDF = () => { window.print(); };
 
-window.generatePDF = () => {
-    const element = document.getElementById('printArea');
-    const opt = {
-        margin: 5,
-        filename: `Ukeplan_${store.currentPlanId}.pdf`,
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 3 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-    html2pdf().set(opt).from(element).save();
-};
-
-// ... Resten av funksjonene (addItem, removeItem, save, load, etc.) forblir like ...
-window.setDrag = (type, text, color = '', needsRoom = false) => { dragData = {type, text, color, needsRoom}; };
-window.closeModals = () => { document.getElementById('modalOverlay').style.display='none'; document.getElementById('roomModal').style.display='none'; document.getElementById('editSubjectModal').style.display='none'; };
-window.applyRoomChoice = (r) => { const plan = store.plans[store.currentPlanId]; plan.cells[pendingRoomTarget] = { ...plan.cells[pendingRoomTarget], s: dragData.text, bg: dragData.color, r: r }; closeModals(); save(); };
-window.clearCell = (id) => { store.plans[store.currentPlanId].cells[id] = {s:'', t:[], bg:'', r:''}; save(); };
-window.removeTeacherFromCell = (id, t) => { const cell = store.plans[store.currentPlanId].cells[id]; cell.t = cell.t.filter(name => name !== t); save(); };
-window.saveInfo = (field) => { const val = document.getElementById(field).innerText; const plan = store.plans[store.currentPlanId]; if (field === 'labelKlasse') plan.klasse = val; if (field === 'labelUke') plan.uke = val; save(); };
-window.addItem = (type) => { const val = document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value; if (!val) return; if (type === 'fag') store.globalSubjects.push({n: val, c: document.getElementById('colInp').value, r: false}); else store.globalTeachers.push(val); save(); };
-window.removeItem = (type, i) => { if (type === 'sub') store.globalSubjects.splice(i, 1); else store.globalTeachers.splice(i, 1); save(); };
-window.addNewClass = () => { const name = prompt("Klassenavn:"); if (name) { store.plans[name] = { klasse: name, uke: "1", cells: {}, times: slotsTemplate.map(s => s.t) }; store.currentPlanId = name; save(); } };
-window.setTab = (t) => { document.getElementById('classView').style.display = t === 'class' ? 'block' : 'none'; document.getElementById('teacherView').style.display = t === 'teacher' ? 'block' : 'none'; document.getElementById('tabClass').className = t === 'class' ? 'tab active' : 'tab'; document.getElementById('tabTeacher').className = t === 'teacher' ? 'tab active' : 'tab'; if(t === 'teacher') updateTeacherFilter(); else window.renderTable('class'); };
-function updateTeacherFilter() { const sel = document.getElementById('teacherFilter'); sel.innerHTML = '<option value="">Velg lærer...</option>' + store.globalTeachers.map(t => `<option value="${t}">${t}</option>`).join(''); sel.onchange = (e) => window.renderTable('teacher', e.target.value); }
-function updateGlobalLists() { document.getElementById('subjectsList').innerHTML = store.globalSubjects.map((s, i) => `<div class="fag-item" draggable="true" ondragstart="setDrag('subject','${s.n}','${s.c}',${s.r})" style="background:${s.c}"><span>${s.n}</span><div style="display:flex; gap:8px;"><span class="action-icon" onclick="openEditSubject(${i})">✏️</span><span class="action-icon" onclick="removeItem('sub',${i})">✕</span></div></div>`).join(''); document.getElementById('teachersList').innerHTML = store.globalTeachers.map((t, i) => `<div class="teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')"><span>${t}</span><span class="action-icon" onclick="removeItem('tea',${i})">✕</span></div>`).join(''); }
-function openEditSubject(i) { editingSubjectIdx = i; const s = store.globalSubjects[i]; document.getElementById('editSubName').value = s.n; document.getElementById('editSubColor').value = s.c; document.getElementById('editSubNeedsRoom').checked = s.r; document.getElementById('modalOverlay').style.display = 'block'; document.getElementById('editSubjectModal').style.display = 'block'; }
-window.saveSubjectEdit = () => { const s = store.globalSubjects[editingSubjectIdx]; s.n = document.getElementById('editSubName').value; s.c = document.getElementById('editSubColor').value; s.r = document.getElementById('editSubNeedsRoom').checked; closeModals(); save(); };
-function updatePlanSelector() { const sel = document.getElementById('planSelector'); sel.innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id === store.currentPlanId ? 'selected' : ''}>${id}</option>`).join(''); sel.onchange = (e) => { store.currentPlanId = e.target.value; window.renderTable(); }; }
-async function save() { await setDoc(doc(db, "data", "mainStore"), store); }
-function loadFromFirebase() { onSnapshot(doc(db, "data", "mainStore"), (d) => { if(d.exists()) { store = d.data(); window.renderTable(); } }); }
-window.openEditSubject = openEditSubject;
+// Start setup
+setupDragEvents();
