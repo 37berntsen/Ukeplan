@@ -375,3 +375,42 @@ input[type="text"], select {
 .fag-item span[onclick]:hover {
     transform: scale(1.2);
 }
+
+/* Legg til dette for å tillate redigering av tidsceller uten at de kollapser */
+.time-cell {
+    background: #f1f5f9;
+    font-weight: 900;
+    width: 90px;
+    font-size: 11px;
+    cursor: text;
+}
+
+.rem-chip {
+    color: red;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.clear-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    cursor: pointer;
+    background: #fff;
+    border: 1.5px solid #000;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+}
+
+/* For å sikre at PDF ikke ser rotete ut */
+@media print {
+    .no-print, .clear-btn, .rem-chip, .tab-nav, .panel, .top-nav {
+        display: none !important;
+    }
+}
+
