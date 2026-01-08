@@ -2,64 +2,56 @@
 <html lang="no">
 <head>
     <meta charset="utf-8"/>
-    <title>Midtstuen skole - Ukeplan v61</title>
+    <title>Midtstuen v61</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="loginOverlay">
         <div class="login-card">
-            <h1>MIDTSTUEN</h1>
-            <button id="loginBtn" class="btn btn-primary">Logg inn med Google</button>
+            <h1 style="color:#2563eb; font-weight:900;">MIDTSTUEN</h1>
+            <button onclick="login()" class="btn btn-primary" style="padding:15px 40px;">Logg inn med Google</button>
         </div>
     </div>
 
     <div id="roomModal" class="modal-box">
-        <h3>Velg rom type</h3>
-        <button class="btn btn-primary" onclick="selectRoom('Primærrom')">Primærrom</button>
-        <button class="btn btn-success" onclick="selectRoom('Ekstrarom')">Ekstrarom</button>
-        <button class="btn btn-danger" onclick="document.getElementById('roomModal').style.display='none'">Avbryt</button>
+        <h3>Velg rom</h3>
+        <button class="btn btn-primary" onclick="applyRoom('Primærrom')">Primærrom</button>
+        <button class="btn btn-success" onclick="applyRoom('Ekstrarom')">Ekstrarom</button>
     </div>
 
     <div class="app-container" id="mainApp" style="display:none;">
         <div class="top-nav">
             <div class="nav-group">
-                <span class="logo">Midtstuen</span>
+                <span style="font-weight:900; color:#2563eb; font-size:22px;">Midtstuen</span>
                 <select id="planSelector" class="btn"></select>
-                <button class="btn btn-primary" id="newPlanBtn">+ Ny Klasse</button>
+                <button class="btn btn-primary" onclick="addNewClass()">+ Ny Klasse</button>
             </div>
             <div class="nav-group">
-                <button class="btn btn-danger" onclick="if(confirm('Nullstill?')) location.reload()">Nullstill</button>
+                <button class="btn btn-danger" onclick="location.reload()">Nullstill</button>
                 <button class="btn btn-success">LAG PDF</button>
             </div>
         </div>
-
         <div class="main-grid">
             <div class="panel">
                 <h3>Fag</h3>
                 <div class="inp-row">
                     <input type="color" id="colInp" value="#bfdbfe">
-                    <input type="text" id="subInp" placeholder="Fagnavn">
-                    <button class="btn btn-primary" id="addFagBtn">+</button>
+                    <input type="text" id="subInp" placeholder="Navn">
+                    <button class="btn btn-primary" onclick="addItem('fag')">+</button>
                 </div>
                 <div id="subjectsList" class="scroll"></div>
             </div>
-
-            <div id="printArea" class="panel-main">
-                <div class="fane-row">
-                    <div class="fane"><span>KLASSE</span><strong id="dispKlasse">9A</strong></div>
-                    <div class="fane"><span>UKE</span><strong>1</strong></div>
-                </div>
+            <div class="panel-main">
                 <table>
                     <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
-
             <div class="panel">
                 <h3>Lærere</h3>
                 <div class="inp-row">
                     <input type="text" id="teaInp" placeholder="Navn">
-                    <button class="btn btn-primary" id="addTeaBtn">+</button>
+                    <button class="btn btn-primary" onclick="addItem('teacher')">+</button>
                 </div>
                 <div id="teachersList" class="scroll"></div>
             </div>
