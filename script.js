@@ -16,7 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Standardoppsett fra din fil
+// Standardfag fra bildet ditt
 const defaultSubjects = [
     {n: "Norsk", c: "#fecaca", r: false}, {n: "Matematikk", c: "#bbf7d0", r: false}, 
     {n: "Engelsk", c: "#bfdbfe", r: false}, {n: "Samfunnsfag", c: "#ffedd5", r: false}, 
@@ -24,6 +24,7 @@ const defaultSubjects = [
     {n: "Kroppsøving", c: "#e9d5ff", r: true}, {n: "Kunst & Håndverk", c: "#fbcfe8", r: true},
     {n: "Musikk", c: "#ddd6fe", r: true}
 ];
+
 const slotsTemplate = [{t:"08:30-09:15"},{t:"09:15-10:00"},{t:"10:00-10:15",p:"PAUSE"},{t:"10:15-11:00"},{t:"11:00-11:45"},{t:"11:45-12:15",p:"LUNSJ"},{t:"12:15-13:00"},{t:"13:00-13:45"},{t:"13:45-14:00",p:"PAUSE"},{t:"14:00-14:45"},{t:"14:45-15:30"}];
 
 let store = { 
@@ -47,7 +48,6 @@ function renderTable() {
     const plan = store.plans[store.currentPlanId];
     const body = document.getElementById('tableBody');
     body.innerHTML = "";
-    let cellIdx = 0;
     
     slotsTemplate.forEach((slot, i) => {
         const tr = document.createElement('tr');
@@ -77,16 +77,15 @@ function renderTable() {
                 td.ondragover = e => e.preventDefault();
                 td.ondrop = (e) => handleDrop(td, cellId, e.clientX, e.clientY);
                 tr.appendChild(td);
-                cellIdx++;
             }
         }
         body.appendChild(tr);
     });
     updateLists();
-    updatePlanSelector();
 }
 
-function updateLists() {
+// FIKSET: Lagt til updateLists som manglet
+window.updateLists = () => {
     const sList = document.getElementById('subjectsList');
     sList.innerHTML = store.globalSubjects.map((s, i) => `
         <div class="fag-item" draggable="true" ondragstart="setDrag('subject','${s.n}','${s.c}',${s.r})" style="background:${s.c}">
@@ -98,7 +97,7 @@ function updateLists() {
         <div class="teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')">
             ${t} <span class="list-rem" onclick="removeItem('tea',${i})">✕</span>
         </div>`).join('');
-}
+};
 
 window.handleDrop = (td, cellId, x, y) => {
     if (!dragData) return;
@@ -115,6 +114,15 @@ window.handleDrop = (td, cellId, x, y) => {
             checkForDoubleHour(cellId, dragData.text, x, y);
         }
     }
+};
+
+// FIKSET: Lagt til addItem som manglet
+window.addItem = (type) => {
+    const val = document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value;
+    if (!val) return;
+    if (type === 'fag') store.globalSubjects.push({n: val, c: document.getElementById('colInp').value, r: true});
+    else store.globalTeachers.push(val);
+    save();
 };
 
 function checkForDoubleHour(cellId, teacherName, x, y) {
@@ -165,12 +173,6 @@ window.removeTeacherFromCell = (id, t) => {
     plan.cells[id].t = plan.cells[id].t.filter(name => name !== t);
     save();
 };
-
-function updatePlanSelector() {
-    const sel = document.getElementById('planSelector');
-    sel.innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id === store.currentPlanId ? 'selected' : ''}>${id}</option>`).join('');
-    sel.onchange = (e) => { store.currentPlanId = e.target.value; renderTable(); };
-}
 
 async function save() { await setDoc(doc(db, "data", "mainStore"), store); }
 function loadFromFirebase() { onSnapshot(doc(db, "data", "mainStore"), (d) => { if(d.exists()) { store = d.data(); renderTable(); } }); }
