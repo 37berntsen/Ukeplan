@@ -16,7 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Standardfag fra bildet ditt
+// Standardoppsett fra din fil
 const defaultSubjects = [
     {n: "Norsk", c: "#fecaca", r: false}, {n: "Matematikk", c: "#bbf7d0", r: false}, 
     {n: "Engelsk", c: "#bfdbfe", r: false}, {n: "Samfunnsfag", c: "#ffedd5", r: false}, 
@@ -24,7 +24,6 @@ const defaultSubjects = [
     {n: "Kroppsøving", c: "#e9d5ff", r: true}, {n: "Kunst & Håndverk", c: "#fbcfe8", r: true},
     {n: "Musikk", c: "#ddd6fe", r: true}
 ];
-
 const slotsTemplate = [{t:"08:30-09:15"},{t:"09:15-10:00"},{t:"10:00-10:15",p:"PAUSE"},{t:"10:15-11:00"},{t:"11:00-11:45"},{t:"11:45-12:15",p:"LUNSJ"},{t:"12:15-13:00"},{t:"13:00-13:45"},{t:"13:45-14:00",p:"PAUSE"},{t:"14:00-14:45"},{t:"14:45-15:30"}];
 
 let store = { 
@@ -58,7 +57,7 @@ function renderTable() {
         tidTd.onblur = () => { plan.times[i] = tidTd.innerText; save(); };
         tr.appendChild(tidTd);
 
-        if (slot.p) tr.innerHTML += `<td colspan="5" class="pause-row">${slot.p}</td>`;
+        if (slot.p) tr.innerHTML += `<td colspan="5" class="pause-row" style="background:#f1f5f9; font-weight:900;">${slot.p}</td>`;
         else {
             for (let d = 0; d < 5; d++) {
                 const td = document.createElement('td');
@@ -84,18 +83,19 @@ function renderTable() {
     updateLists();
 }
 
-// FIKSET: Lagt til updateLists som manglet
 window.updateLists = () => {
     const sList = document.getElementById('subjectsList');
+    if(!sList) return;
     sList.innerHTML = store.globalSubjects.map((s, i) => `
-        <div class="fag-item" draggable="true" ondragstart="setDrag('subject','${s.n}','${s.c}',${s.r})" style="background:${s.c}">
-            ${s.n} <span class="list-rem" onclick="removeItem('sub',${i})">✕</span>
+        <div class="fag-item" draggable="true" ondragstart="setDrag('subject','${s.n}','${s.c}',${s.r})" style="background:${s.c}; padding:10px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between;">
+            ${s.n} <span onclick="removeItem('sub',${i})" style="cursor:pointer;">✕</span>
         </div>`).join('');
     
     const tList = document.getElementById('teachersList');
+    if(!tList) return;
     tList.innerHTML = store.globalTeachers.map((t, i) => `
-        <div class="teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')">
-            ${t} <span class="list-rem" onclick="removeItem('tea',${i})">✕</span>
+        <div class="teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')" style="padding:10px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between;">
+            ${t} <span onclick="removeItem('tea',${i})" style="cursor:pointer;">✕</span>
         </div>`).join('');
 };
 
@@ -116,12 +116,12 @@ window.handleDrop = (td, cellId, x, y) => {
     }
 };
 
-// FIKSET: Lagt til addItem som manglet
 window.addItem = (type) => {
     const val = document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value;
     if (!val) return;
     if (type === 'fag') store.globalSubjects.push({n: val, c: document.getElementById('colInp').value, r: true});
     else store.globalTeachers.push(val);
+    document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value = "";
     save();
 };
 
@@ -143,6 +143,7 @@ function checkForDoubleHour(cellId, teacherName, x, y) {
 
 window.confirmCopy = () => {
     const plan = store.plans[store.currentPlanId];
+    if (!plan.cells[copyTarget.cellId]) plan.cells[copyTarget.cellId] = {s:'', t:[], bg:'', r:''};
     if (!plan.cells[copyTarget.cellId].t.includes(copyTarget.teacher)) {
         plan.cells[copyTarget.cellId].t.push(copyTarget.teacher);
         save();
