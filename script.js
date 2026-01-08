@@ -16,6 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+// Standardoppsett som garanterer innhold
 const defaultSubjects = [
     {n: "Norsk", c: "#fecaca", r: false}, {n: "Matematikk", c: "#bbf7d0", r: false}, 
     {n: "Engelsk", c: "#bfdbfe", r: false}, {n: "Samfunnsfag", c: "#ffedd5", r: false}, 
@@ -35,14 +36,19 @@ let store = {
 
 let dragData = null, pendingRoomTarget = null, copyTarget = null;
 
-// GJØR FUNKSJONENE GLOBALE SLIK AT HTML KAN SE DEM
+// GJØR FUNKSJONER GLOBALE SLIK AT HTML SER DEM
 window.login = () => signInWithPopup(auth, provider);
 
 window.addItem = (type) => {
+    // SIKRING: Sørger for at listene eksisterer før vi pusher til dem
+    if (!store.globalSubjects) store.globalSubjects = [...defaultSubjects];
+    if (!store.globalTeachers) store.globalTeachers = [];
+
     const val = document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value;
     if (!val) return;
     if (type === 'fag') store.globalSubjects.push({n: val, c: document.getElementById('colInp').value, r: true});
     else store.globalTeachers.push(val);
+    
     document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value = "";
     save();
 };
@@ -106,8 +112,10 @@ window.confirmCopy = () => {
     document.getElementById('copyPrompt').style.display = "none";
 };
 
-// INTERNE FUNKSJONER
-async function save() { await setDoc(doc(db, "data", "mainStore"), store); }
+// FIREBASE OG RENDERING
+async function save() { 
+    await setDoc(doc(db, "data", "mainStore"), store); 
+}
 
 function handleDrop(td, cellId, x, y) {
     if (!dragData) return;
@@ -128,9 +136,8 @@ function handleDrop(td, cellId, x, y) {
 
 function checkForDoubleHour(cellId, teacherName, x, y) {
     const [row, col] = cellId.split('-').map(Number);
-    // Hopper over pauser
     let nextRow = row + 1;
-    if (nextRow === 2 || nextRow === 5 || nextRow === 8) nextRow++;
+    if ([2, 5, 8].includes(nextRow)) nextRow++;
     
     const nextCellId = `${nextRow}-${col}`;
     if (document.getElementById(nextCellId)) {
@@ -146,6 +153,10 @@ function checkForDoubleHour(cellId, teacherName, x, y) {
 }
 
 function renderTable() {
+    // SIKRING: Initialiserer lister hvis de mangler i Firebase-dataen
+    if (!store.globalSubjects) store.globalSubjects = [...defaultSubjects];
+    if (!store.globalTeachers) store.globalTeachers = [];
+
     const plan = store.plans[store.currentPlanId];
     const body = document.getElementById('tableBody');
     body.innerHTML = "";
@@ -182,11 +193,8 @@ function renderTable() {
         }
         body.appendChild(tr);
     });
-    updateListsUI();
-    updatePlanSelector();
-}
-
-function updateListsUI() {
+    
+    // Oppdaterer listene i grensesnittet
     document.getElementById('subjectsList').innerHTML = store.globalSubjects.map((s, i) => `
         <div class="fag-item" draggable="true" ondragstart="setDrag('subject','${s.n}','${s.c}',${s.r})" style="background:${s.c}; padding:10px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between;">
             ${s.n} <span onclick="removeItem('sub',${i})" style="cursor:pointer;">✕</span>
@@ -196,9 +204,7 @@ function updateListsUI() {
         <div class="teacher-item" draggable="true" ondragstart="setDrag('teacher','${t}')" style="padding:10px; margin-bottom:5px; border:2px solid #000; border-radius:8px; font-weight:800; cursor:grab; display:flex; justify-content:space-between;">
             ${t} <span onclick="removeItem('tea',${i})" style="cursor:pointer;">✕</span>
         </div>`).join('');
-}
 
-function updatePlanSelector() {
     const sel = document.getElementById('planSelector');
     sel.innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id === store.currentPlanId ? 'selected' : ''}>${id}</option>`).join('');
     sel.onchange = (e) => { store.currentPlanId = e.target.value; renderTable(); };
@@ -207,6 +213,7 @@ function updatePlanSelector() {
 function loadFromFirebase() {
     onSnapshot(doc(db, "data", "mainStore"), (d) => {
         if(d.exists()) { store = d.data(); renderTable(); }
+        else { renderTable(); } // Tegner tabell selv om ingen data finnes i skyen ennå
     });
 }
 
