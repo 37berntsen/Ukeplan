@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
     <meta charset="utf-8"/>
-    <title>Midtstuen skole - Ukeplan Dashboard</title>
+    <title>Midtstuen skole - Ukeplan v61</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -11,33 +11,17 @@
     <div id="loginOverlay">
         <div class="login-card">
             <h1>MIDTSTUEN</h1>
-            <button id="loginBtn" class="btn btn-primary">Logg inn med Google</button>
+            <button onclick="login()" class="btn btn-primary">Logg inn med Google</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModals()"></div>
 
     <div id="roomModal" class="custom-modal">
         <h2 id="modalSubjectTitle">Fag</h2>
-        <p>Velg rom for denne timen:</p>
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
             <button class="btn btn-primary" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
             <button class="btn btn-success" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
-        </div>
-    </div>
-
-    <div id="editSubjectModal" class="custom-modal">
-        <h2>Rediger Fag</h2>
-        <div style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
-            <label>Fagnavn: <input type="text" id="editSubName" style="width:100%; padding:8px;"></label>
-            <label>Farge: <input type="color" id="editSubColor" style="width:100%; height:40px; border:none;"></label>
-            <label style="display:flex; gap:10px; align-items:center;">
-                <input type="checkbox" id="editSubNeedsRoom"> Krever romvalg
-            </label>
-        </div>
-        <div style="display: flex; gap: 10px; margin-top: 25px;">
-            <button class="btn btn-primary" style="flex:1" id="saveSubEditBtn">Lagre</button>
-            <button class="btn btn-outline" style="flex:1" onclick="closeModals()">Avbryt</button>
         </div>
     </div>
 
@@ -45,15 +29,12 @@
         <header class="top-nav">
             <div class="nav-group">
                 <span class="logo-text">Midtstuen</span>
-                <div class="class-selector-box">
-                    <span>KLASSE:</span>
-                    <select id="planSelector"></select>
-                </div>
-                <button class="btn btn-primary" id="newPlanBtn">+ Ny Klasse</button>
+                <select id="planSelector" onchange="loadPlan(this.value)"></select>
+                <button class="btn btn-primary" onclick="createNewPlan()">+ Ny Klasse</button>
             </div>
             <div class="nav-group">
-                <button class="btn btn-outline" id="saveToCloudBtn">Lagre til skyen</button>
-                <button class="btn btn-danger" id="resetBtn">Nullstill</button>
+                <button class="btn btn-outline">Lagre fil</button>
+                <button class="btn btn-danger" onclick="location.reload()">Nullstill</button>
                 <button class="btn btn-success" id="pdfBtn">LAG PDF</button>
             </div>
         </header>
@@ -61,38 +42,33 @@
         <div class="main-grid">
             <aside class="panel">
                 <h3>Fag</h3>
-                <div class="input-row">
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
                     <input type="color" id="colInp" value="#bfdbfe">
                     <input type="text" id="subInp" placeholder="Nytt fag...">
-                    <button class="btn btn-primary" id="addFagBtn">+</button>
+                    <button class="btn btn-primary" onclick="addGlobalItem('subject')">+</button>
                 </div>
-                <div class="scroll-area" id="subjectsList"></div>
-                <button class="btn btn-outline" id="logoutBtn" style="margin-top:auto;">Logg ut</button>
+                <div id="subjectsList" class="scroll-area"></div>
             </aside>
 
             <main id="printArea">
-                <nav class="tab-nav">
-                    <div class="tab active" id="tabClass">KLASSE</div>
-                    <div class="tab" id="tabTeacher">LÆRER</div>
-                </nav>
-                
+                <div class="tab-nav">
+                    <div class="tab active" id="tabClass" onclick="setTab('class')">KLASSE</div>
+                    <div class="tab" id="tabTeacher" onclick="setTab('teacher')">LÆRER</div>
+                </div>
                 <div id="classView">
                     <div class="fane-container">
-                        <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" contenteditable="true" id="labelKlasse">9A</span></div>
-                        <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" contenteditable="true" id="labelUke">1</span></div>
+                        <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" id="labelKlasse" contenteditable="true">9A</span></div>
+                        <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" id="labelUke" contenteditable="true">1</span></div>
                     </div>
-                    <table id="mainTable">
-                        <thead><tr><th>TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
+                    <table>
+                        <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
                         <tbody id="tableBody"></tbody>
                     </table>
                 </div>
-
                 <div id="teacherView" style="display:none;">
-                    <div style="text-align:center; margin-bottom:15px;">
-                        <select id="teacherViewSelector" class="btn"></select>
-                    </div>
-                    <table id="teacherTable">
-                        <thead><tr><th>TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
+                    <select id="teacherViewSelector" class="btn"></select>
+                    <table>
+                        <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
                         <tbody id="teacherTableBody"></tbody>
                     </table>
                 </div>
@@ -100,13 +76,11 @@
 
             <aside class="panel">
                 <h3>Lærere</h3>
-                <div class="input-row">
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
                     <input type="text" id="teaInp" placeholder="Navn...">
-                    <button class="btn btn-primary" id="addTeaBtn">+</button>
+                    <button class="btn btn-primary" onclick="addGlobalItem('teacher')">+</button>
                 </div>
-                <button class="btn btn-outline" id="importExcelBtn" style="width:100%; margin:10px 0;">Importer Excel (A+B)</button>
-                <input type="file" id="excelInput" style="display:none;" accept=".xlsx,.xls">
-                <div class="scroll-area" id="teachersList"></div>
+                <div id="teachersList" class="scroll-area"></div>
             </aside>
         </div>
     </div>
