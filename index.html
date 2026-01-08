@@ -4,74 +4,85 @@
     <meta charset="utf-8"/>
     <title>Midtstuen Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-    <div id="loginOverlay" style="position:fixed; inset:0; background:white; display:flex; align-items:center; justify-content:center; z-index:20000;">
-        <button onclick="login()" class="btn btn-primary" style="padding:20px 40px; font-size:1.5rem;">Logg inn med Google</button>
+    <div id="loginOverlay">
+        <div style="background:#fff; padding:50px; border:4px solid #000; border-radius:20px; text-align:center; box-shadow:10px 10px 0px #000;">
+            <h1 style="margin-top:0; color:#2563eb;">MIDTSTUEN</h1>
+            <button onclick="login()" class="btn btn-primary" style="padding:15px 40px; font-size:18px;">Logg inn med Google</button>
+        </div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeModals()"></div>
 
     <div id="roomModal" class="custom-modal">
-        <h3>Velg rom</h3>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-            <button class="btn btn-primary" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
-            <button class="btn btn-success" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
+        <h3 id="modalSubjectTitle">Romvalg</h3>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn btn-primary" style="flex:1" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
+            <button class="btn btn-success" style="flex:1" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
         </div>
     </div>
 
-    <div id="copyPrompt" onclick="confirmCopy()">Legg til i neste time også? ⬇️</div>
+    <div id="editSubjectModal" class="custom-modal">
+        <h3>Rediger Fag</h3>
+        <div style="text-align:left; margin:20px 0;">
+            <label>Navn: <input type="text" id="editSubName" class="btn" style="width:100%; margin-bottom:15px;"></label>
+            <label>Farge: <input type="color" id="editSubColor" style="width:100%; height:40px; border:none;"></label>
+            <label style="display:flex; align-items:center; gap:10px; margin-top:15px;">
+                <input type="checkbox" id="editSubNeedsRoom"> Krever romvalg
+            </label>
+        </div>
+        <button class="btn btn-success" style="width:100%" onclick="saveSubjectEdit()">Lagre</button>
+    </div>
 
     <div class="app-container" id="mainApp" style="display:none;">
-        <div class="top-nav no-print">
+        <header class="top-nav no-print">
             <div class="nav-group">
-                <h2 style="margin:0; font-weight:900; color:var(--primary);">Midtstuen</h2>
+                <span class="logo">Midtstuen</span>
                 <select id="planSelector" onchange="switchPlan()"></select>
-                <button class="btn btn-primary" onclick="createNewPlan()">+ Ny Klasse</button>
+                <button class="btn btn-primary" onclick="addNewClass()">+ Ny Klasse</button>
             </div>
             <div class="nav-group">
-                <button class="btn btn-success" onclick="window.print()">🖨️ LAG PDF</button>
+                <button class="btn btn-success" onclick="window.print()">LAG PDF</button>
             </div>
-        </div>
+        </header>
 
         <div class="main-grid">
-            <div class="panel no-print">
+            <aside class="panel no-print">
                 <h3>Fag</h3>
-                <div style="display:flex; gap:5px;">
-                    <input type="color" id="colInp" value="#bfdbfe">
-                    <input type="text" id="subInp" placeholder="Navn...">
-                    <button class="btn btn-primary" onclick="addGlobalItem('subject')">+</button>
+                <div style="display:flex; gap:5px; margin-bottom:15px;">
+                    <input type="color" id="colInp" value="#bfdbfe" style="width:40px; height:40px; border:none; background:none;">
+                    <input type="text" id="subInp" placeholder="Navn" style="flex:1; padding:8px; border:2px solid #000; border-radius:8px;">
+                    <button class="btn btn-primary" onclick="addItem('fag')">+</button>
                 </div>
-                <div class="scroll-area" id="subjectsList"></div>
-            </div>
+                <div id="subjectsList" class="scroll-area"></div>
+            </aside>
 
-            <div id="printArea">
-                <div class="tab-nav no-print">
+            <main id="printArea">
+                <nav class="tab-nav no-print">
                     <div class="tab active" id="tabClass" onclick="setTab('class')">KLASSE</div>
                     <div class="tab" id="tabTeacher" onclick="setTab('teacher')">LÆRER</div>
-                </div>
-                
+                </nav>
                 <div class="fane-container">
-                    <div class="fane-box"><span class="fane-label">Klasse</span><span class="fane-content" contenteditable="true" id="labelKlasse" onblur="persistData()">9A</span></div>
-                    <select id="teacherViewSelector" class="no-print" style="display:none; padding:10px; border-radius:10px; border:2px solid #000; font-weight:900;" onchange="renderTeacherSchedule()"></select>
-                    <div class="fane-box"><span class="fane-label">Uke</span><span class="fane-content" contenteditable="true" id="labelUke" onblur="persistData()">1</span></div>
+                    <div class="fane-box"><span class="fane-label">KLASSE</span><div class="fane-content" id="labelKlasse" contenteditable="true" onblur="persistData()">9A</div></div>
+                    <select id="teacherViewSelector" class="btn" style="display:none; font-size:20px; font-weight:900;" onchange="setTab('teacher')"></select>
+                    <div class="fane-box"><span class="fane-label">UKE</span><div class="fane-content" id="labelUke" contenteditable="true" onblur="persistData()">1</div></div>
                 </div>
-
-                <table id="mainTable">
-                    <thead><tr><th>TID</th><th>MANDAG</th><th>TIRSDAG</th><th>ONSDAG</th><th>TORSDAG</th><th>FREDAG</th></tr></thead>
+                <table>
+                    <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
                     <tbody id="tableBody"></tbody>
                 </table>
-            </div>
+            </main>
 
-            <div class="panel no-print">
+            <aside class="panel no-print">
                 <h3>Lærere</h3>
-                <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <input type="text" id="teaInp" placeholder="Navn...">
-                    <button class="btn btn-primary" onclick="addGlobalItem('teacher')">+</button>
+                <div style="display:flex; gap:5px; margin-bottom:15px;">
+                    <input type="text" id="teaInp" placeholder="Navn" style="flex:1; padding:8px; border:2px solid #000; border-radius:8px;">
+                    <button class="btn btn-primary" onclick="addItem('teacher')">+</button>
                 </div>
-                <div class="scroll-area" id="teachersList"></div>
-            </div>
+                <div id="teachersList" class="scroll-area"></div>
+            </aside>
         </div>
     </div>
     <script type="module" src="script.js"></script>
