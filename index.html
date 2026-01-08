@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="copyPrompt" class="copy-prompt" onclick="confirmCopy()">Legg til i neste time også? ⬇️</div>
+    <div id="copyPrompt" class="copy-bubble" onclick="confirmCopy()">Legg til i neste time også? ⬇️</div>
 
     <div id="loginOverlay">
         <div class="login-card">
@@ -16,28 +16,27 @@
     </div>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeModals()"></div>
-    
-    <div id="roomModal" class="room-modal">
+    <div id="roomModal" class="custom-modal">
         <h3>Rominnstillinger</h3>
-        <div class="room-btn-row">
-            <button class="btn btn-primary" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
-            <button class="btn btn-outline" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button class="btn btn-primary" style="flex:1" onclick="applyRoomChoice('Primærrom')">Primærrom</button>
+            <button class="btn btn-outline" style="flex:1" onclick="applyRoomChoice('Ekstrarom')">Ekstrarom</button>
         </div>
-        <div class="room-actions">
-            <button class="btn btn-success" onclick="closeModals()">Lagre</button>
-            <button class="btn btn-danger" onclick="closeModals()">Avbryt</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-success" style="flex:1" onclick="closeModals()">Lagre</button>
+            <button class="btn btn-danger" style="flex:1" onclick="closeModals()">Avbryt</button>
         </div>
     </div>
 
     <div class="app-container" id="mainApp" style="display:none;">
         <header class="top-nav">
             <div class="nav-group">
-                <span class="logo-text">Midtstuen</span>
-                <select id="planSelector"></select>
-                <button class="btn btn-primary">+ Ny Klasse</button>
+                <span class="logo">Midtstuen</span>
+                <select id="planSelector" class="btn"></select>
+                <button class="btn btn-primary" onclick="addNewClass()">+ Ny Klasse</button>
             </div>
             <div class="nav-group">
-                <button class="btn btn-danger">Nullstill</button>
+                <button class="btn btn-danger" onclick="location.reload()">Nullstill</button>
                 <button class="btn btn-success">LAG PDF</button>
             </div>
         </header>
@@ -45,18 +44,40 @@
         <div class="main-grid">
             <aside class="panel">
                 <h3>Fag</h3>
-                <div class="scroll-area" id="subjectsList"></div>
+                <div class="inp-row">
+                    <input type="color" id="colInp" value="#bfdbfe">
+                    <input type="text" id="subInp" placeholder="Navn">
+                    <button class="btn btn-primary" onclick="addItem('fag')">+</button>
+                </div>
+                <div id="subjectsList" class="scroll-area"></div>
             </aside>
 
             <main id="printArea">
-                <table>
-                    <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+                <nav class="tab-nav">
+                    <div class="tab active" id="tabClass" onclick="setTab('class')">KLASSE</div>
+                    <div class="tab" id="tabTeacher" onclick="setTab('teacher')">LÆRER</div>
+                </nav>
+                <div id="classView">
+                    <div class="info-row">
+                        <div class="info-box"><span>KLASSE</span><strong id="labelKlasse">9A</strong></div>
+                        <div class="info-box"><span>UKE</span><strong id="labelUke">1</strong></div>
+                    </div>
+                    <table>
+                        <thead><tr><th>TID</th><th>MAN</th><th>TIR</th><th>ONS</th><th>TOR</th><th>FRE</th></tr></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+                <div id="teacherView" style="display:none;">
+                    <h2 style="text-align:center;">Lærervisning</h2>
+                </div>
             </main>
 
             <aside class="panel">
                 <h3>Lærere</h3>
+                <div class="inp-row">
+                    <input type="text" id="teaInp" placeholder="Navn">
+                    <button class="btn btn-primary" onclick="addItem('teacher')">+</button>
+                </div>
                 <div id="teachersList" class="scroll-area"></div>
             </aside>
         </div>
