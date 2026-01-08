@@ -4,14 +4,10 @@
     <meta charset="utf-8"/>
     <title>Midtstuen Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div id="loginOverlay" style="position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:20000;">
-        <div style="text-align:center;">
-            <h1 style="color:#2563eb; font-size:3rem; margin-bottom:30px;">MIDTSTUEN</h1>
-            <button onclick="login()" style="padding:15px 40px; border:3px solid #000; border-radius:10px; font-weight:900; cursor:pointer; font-size:1.2rem; background:#fff; box-shadow:4px 4px 0px #000;">Logg inn med Google</button>
-        </div>
+        <button onclick="login()" style="padding:15px 40px; border:3px solid #000; border-radius:10px; font-weight:900; cursor:pointer; font-size:1.5rem; background:#fff; box-shadow:6px 6px 0px #000;">Logg inn med Google</button>
     </div>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeModals()"></div>
@@ -27,21 +23,21 @@
     <div id="editSubjectModal" class="custom-modal">
         <h3>Rediger Fag</h3>
         <div style="text-align:left; margin:20px 0;">
-            <label>Navn: <input type="text" id="editSubName" style="width:100%; padding:8px; margin-bottom:15px; border:2px solid #000; border-radius:8px;"></label>
-            <label>Farge: <input type="color" id="editSubColor" style="width:100%; height:40px; border:2px solid #000; border-radius:8px;"></label>
+            <label>Navn: <input type="text" id="editSubName" style="width:100%; padding:8px; border:2px solid #000; border-radius:8px;"></label>
+            <label>Farge: <input type="color" id="editSubColor" style="width:100%; height:40px; border:2px solid #000; border-radius:8px; margin-top:10px;"></label>
             <label style="display:flex; align-items:center; gap:10px; margin-top:15px;"><input type="checkbox" id="editSubNeedsRoom"> Krever romvalg</label>
         </div>
-        <button onclick="saveSubjectEdit()" style="width:100%; padding:10px; background:#16a34a; color:white; border:3px solid #000; border-radius:8px; font-weight:900; cursor:pointer;">Lagre</button>
+        <button onclick="saveSubjectEdit()" style="width:100%; padding:10px; background:#16a34a; color:white; border:3px solid #000; border-radius:8px; font-weight:900;">Lagre</button>
     </div>
 
     <div class="app-container" id="mainApp" style="display:none;">
         <header class="top-nav no-print">
             <div class="nav-group">
-                <span style="font-size:1.5rem; font-weight:900; color:#2563eb;">Midtstuen</span>
+                <span style="font-size:1.5rem; font-weight:900; color:#2563eb; margin-right:20px;">Midtstuen</span>
                 <select id="planSelector" onchange="switchPlan()" style="padding:8px; border:2px solid #000; border-radius:8px; font-weight:900;"></select>
-                <button onclick="addNewClass()" style="padding:8px 15px; background:#2563eb; color:white; border:2px solid #000; border-radius:8px; font-weight:900; cursor:pointer;">+ Ny Klasse</button>
+                <button onclick="addNewClass()" style="padding:8px 15px; background:#2563eb; color:white; border:2px solid #000; border-radius:8px; font-weight:900;">+ Ny Klasse</button>
             </div>
-            <button onclick="window.print()" style="padding:8px 15px; background:#16a34a; color:white; border:2px solid #000; border-radius:8px; font-weight:900; cursor:pointer;">LAG PDF</button>
+            <button onclick="window.print()" style="padding:8px 15px; background:#16a34a; color:white; border:2px solid #000; border-radius:8px; font-weight:900;">LAG PDF</button>
         </header>
 
         <div class="main-grid">
@@ -62,7 +58,7 @@
                 </nav>
                 <div class="fane-container">
                     <div class="fane-box"><span class="fane-label">KLASSE</span><div class="fane-content" id="labelKlasse" contenteditable="true" onblur="persistData()">9A</div></div>
-                    <select id="teacherViewSelector" class="no-print" style="display:none; font-size:20px; font-weight:900; padding:10px; border:3px solid #000; border-radius:12px;" onchange="renderTableByTab()"></select>
+                    <select id="teacherViewSelector" class="no-print" style="display:none; font-size:20px; font-weight:900; padding:10px; border:3px solid #000; border-radius:12px;" onchange="renderTeacherSchedule()"></select>
                     <div class="fane-box"><span class="fane-label">UKE</span><div class="fane-content" id="labelUke" contenteditable="true" onblur="persistData()">1</div></div>
                 </div>
                 <table>
