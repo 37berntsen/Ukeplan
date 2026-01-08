@@ -16,146 +16,164 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Data-struktur
+// Mal for tidsplanen
+const slotsTemplate = [
+    {t: "08:30-09:15"}, {t: "09:15-10:00"}, {t: "10:00-10:15", p: "PAUSE"},
+    {t: "10:15-11:00"}, {t: "11:00-11:45"}, {t: "11:45-12:15", p: "LUNSJ"},
+    {t: "12:15-13:00"}, {t: "13:00-13:45"}, {t: "13:45-14:00", p: "PAUSE"},
+    {t: "14:00-14:45"}, {t: "14:45-15:30"}
+];
+
 let store = {
     currentPlanId: "9A",
     globalSubjects: [],
     globalTeachers: [],
-    plans: { "9A": { klasse: "9A", cells: Array(60).fill(null).map(() => ({s:'', r:'', t:[], bg:''})), times: ["08:30-09:15", "09:15-10:00", "10:00-10:15", "10:15-11:00", "11:00-11:45", "11:45-12:15", "12:15-13:00", "13:00-13:45", "13:45-14:00", "14:00-14:45", "14:45-15:30"] } }
+    plans: { "9A": { klasse: "9A", laerer: "", uke: "1", cells: [] } }
 };
 
-let draggedItem = null;
-let pendingCellIdx = null;
+let currentTab = 'class', dragData = null, pendingRoomTarget = null, editingSubIndex = null;
 
-// INNLOGGING
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         loadFromFirebase();
-    } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
     }
 });
-
-window.login = () => {
-    signInWithPopup(auth, provider).catch(err => {
-        alert("Feil ved innlogging: " + err.message);
-        console.error(err);
-    });
-};
-
-// APP LOGIKK
-function setupApp() {
-    renderTable();
-    updateLists();
-    updatePlanSelector();
-}
 
 function renderTable() {
     const plan = store.plans[store.currentPlanId];
     const body = document.getElementById('tableBody');
     body.innerHTML = "";
-    
     let cellIdx = 0;
-    plan.times.forEach((time, i) => {
-        const tr = document.createElement('tr');
-        
-        const tidTd = document.createElement('td');
-        tidTd.className = "time-cell";
-        tidTd.contentEditable = true;
-        tidTd.innerText = time;
-        tidTd.onblur = () => { plan.times[i] = tidTd.innerText; save(); };
-        tr.appendChild(tidTd);
 
-        const isPause = [2, 5, 8].includes(i);
-        if (isPause) {
-            const txt = i === 5 ? "LUNSJ" : "PAUSE";
-            tr.innerHTML += `<td colspan="5" class="pause-row">${txt}</td>`;
+    slotsTemplate.forEach((slot, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="time-cell" contenteditable="true">${slot.t}</td>`;
+
+        if(slot.p) {
+            tr.innerHTML += `<td colspan="5" class="pause-row">${slot.p}</td>`;
         } else {
-            for (let d = 0; d < 5; d++) {
+            for(let j=0; j<5; j++) {
                 const td = document.createElement('td');
-                td.className = "drop-zone";
-                const idx = cellIdx;
-                const c = plan.cells[idx] || {s:'', r:'', t:[], bg:''};
+                td.className = "dropzone";
+                const saved = plan.cells[cellIdx] || {s:'', t:[], bg:'', r:''};
                 
-                if (c.bg) td.style.backgroundColor = c.bg;
+                td.style.backgroundColor = saved.bg || '';
                 td.innerHTML = `
-                    <div class="s-text">${c.s || ''}</div>
-                    <div class="r-text">${c.r || ''}</div>
-                    <div class="t-wrap">${(c.t || []).map(t => `<span class="chip">${t}</span>`).join('')}</div>
-                    ${c.s ? `<span class="del-x" onclick="clearCell(${idx})">×</span>` : ''}
+                    <div class="subject-display">${saved.s || ''}</div>
+                    <div class="room-label">${saved.r || ''}</div>
+                    <div class="teachers-container">
+                        ${(saved.t || []).map(t => `<span class="teacher-chip">${t}<span class="remove-chip" onclick="removeTeacher(this)">✕</span></span>`).join('')}
+                    </div>
+                    ${saved.s ? '<span class="clear-btn" onclick="clearCell(this)">✕</span>' : ''}
                 `;
-                td.ondragover = e => e.preventDefault();
-                td.ondrop = () => handleDrop(idx);
                 tr.appendChild(td);
                 cellIdx++;
             }
         }
         body.appendChild(tr);
     });
+    setupDragEvents();
 }
 
-window.setDrag = (type, text, color = '') => { draggedItem = {type, text, color}; };
+// DRAG AND DROP LOGIKK
+function setupDragEvents() {
+    document.querySelectorAll('.dropzone').forEach(z => {
+        z.ondragover = e => e.preventDefault();
+        z.ondrop = e => {
+            if(!dragData) return;
+            const idx = Array.from(document.querySelectorAll('.dropzone')).indexOf(z);
+            if(dragData.type === 'subject') {
+                if(dragData.needsRoom) {
+                    pendingRoomTarget = z;
+                    document.getElementById('modalOverlay').style.display = 'block';
+                    document.getElementById('roomModal').style.display = 'block';
+                } else {
+                    updateCell(z, idx, dragData.text, dragData.color, "");
+                }
+            } else {
+                addTeacher(z, idx, dragData.text);
+            }
+        };
+    });
+}
 
-function handleDrop(idx) {
-    if (!draggedItem) return;
-    if (draggedItem.type === 'fag') {
-        pendingCellIdx = idx;
-        document.getElementById('roomModal').style.display = 'block';
+// KNAPPEFUNKSJONER
+window.applyRoomChoice = (room) => {
+    const idx = Array.from(document.querySelectorAll('.dropzone')).indexOf(pendingRoomTarget);
+    updateCell(pendingRoomTarget, idx, dragData.text, dragData.color, room);
+    closeModals();
+};
+
+window.addGlobalItem = (type) => {
+    const inp = document.getElementById(type === 'subject' ? 'subInp' : 'teaInp');
+    if(!inp.value) return;
+    if(type === 'subject') {
+        store.globalSubjects.push({n: inp.value, c: document.getElementById('colInp').value, r: true});
     } else {
-        const plan = store.plans[store.currentPlanId];
-        if (!plan.cells[idx].t.includes(draggedItem.text)) {
-            plan.cells[idx].t.push(draggedItem.text);
-            save();
-        }
+        store.globalTeachers.push(inp.value);
     }
-}
+    inp.value = "";
+    saveToFirebase();
+};
 
-window.applyRoom = (room) => {
+window.setTab = (type) => {
+    currentTab = type;
+    document.getElementById('tabClass').classList.toggle('active', type === 'class');
+    document.getElementById('tabTeacher').classList.toggle('active', type === 'teacher');
+    document.getElementById('classView').style.display = type === 'class' ? 'block' : 'none';
+    document.getElementById('teacherView').style.display = type === 'teacher' ? 'block' : 'none';
+};
+
+// FIREBASE SYNCHRONIZATION
+async function saveToFirebase() {
     const plan = store.plans[store.currentPlanId];
-    plan.cells[pendingCellIdx].s = draggedItem.text;
-    plan.cells[pendingCellIdx].bg = draggedItem.color;
-    plan.cells[pendingCellIdx].r = room;
-    document.getElementById('roomModal').style.display = 'none';
-    save();
-};
-
-window.clearCell = (idx) => {
-    store.plans[store.currentPlanId].cells[idx] = {s:'', r:'', t:[], bg:''};
-    save();
-};
-
-window.addItem = (type) => {
-    const val = document.getElementById(type === 'fag' ? 'subInp' : 'teaInp').value;
-    if (!val) return;
-    if (type === 'fag') store.globalSubjects.push({n: val, c: document.getElementById('colInp').value});
-    else store.globalTeachers.push(val);
-    save();
-};
-
-window.addNewClass = () => {
-    const name = prompt("Navn på ny klasse:");
-    if (name) {
-        store.plans[name] = JSON.parse(JSON.stringify(store.plans["9A"]));
-        store.plans[name].klasse = name;
-        store.plans[name].cells = Array(60).fill(null).map(() => ({s:'', r:'', t:[], bg:''}));
-        store.currentPlanId = name;
-        save();
-    }
-};
-
-function updateLists() {
-    document.getElementById('subjectsList').innerHTML = store.globalSubjects.map(s => `<div class="item" draggable="true" style="background:${s.c}" ondragstart="setDrag('fag','${s.n}','${s.c}')">${s.n}</div>`).join('');
-    document.getElementById('teachersList').innerHTML = store.globalTeachers.map(t => `<div class="item" draggable="true" ondragstart="setDrag('teacher','${t}')">${t}</div>`).join('');
+    plan.cells = [];
+    document.querySelectorAll('.dropzone').forEach(z => {
+        const ts = Array.from(z.querySelectorAll('.teacher-chip')).map(c => c.firstChild.textContent);
+        plan.cells.push({
+            s: z.querySelector('.subject-display').innerText,
+            r: z.querySelector('.room-label').innerText,
+            t: ts,
+            bg: z.style.backgroundColor
+        });
+    });
+    await setDoc(doc(db, "data", "mainStore"), store);
 }
 
-function updatePlanSelector() {
-    const sel = document.getElementById('planSelector');
-    sel.innerHTML = Object.keys(store.plans).map(id => `<option value="${id}" ${id === store.currentPlanId ? 'selected' : ''}>${id}</option>`).join('');
-    sel.onchange = (e) => { store.currentPlanId = e.target.value; renderTable(); };
+function loadFromFirebase() {
+    onSnapshot(doc(db, "data", "mainStore"), (doc) => {
+        if(doc.exists()) {
+            store = doc.data();
+            updateGlobalLists();
+            renderTable();
+        }
+    });
 }
 
-async function save() { await setDoc(doc(db, "data", "main"), store); }
-function loadFromFirebase() { onSnapshot(doc(db, "data", "main"), (d) => { if(d.exists()){ store = d.data(); setupApp(); }}); }
+function updateGlobalLists() {
+    const sL = document.getElementById('subjectsList');
+    sL.innerHTML = store.globalSubjects.map((s, i) => `
+        <div class="item" draggable="true" ondragstart='dragData={type:"subject",text:"${s.n}",color:"${s.c}",needsRoom:${s.r}}'>
+            <div class="color-preview" style="background:${s.c}"></div>
+            <span>${s.n}</span>
+            <div class="item-actions">
+                <span class="action-btn" onclick="openEditSubject(${i})">✎</span>
+                <span class="action-btn" onclick="removeItem('subject', ${i})">✕</span>
+            </div>
+        </div>`).join('');
+
+    const tL = document.getElementById('teachersList');
+    tL.innerHTML = store.globalTeachers.map((t, i) => `
+        <div class="item" draggable="true" ondragstart='dragData={type:"teacher",text:"${t}"}'>
+            <span>👤 ${t}</span>
+            <span class="action-btn" onclick="removeItem('teacher', ${i})">✕</span>
+        </div>`).join('');
+}
+
+window.login = () => signInWithPopup(auth, provider);
+window.closeModals = () => {
+    document.getElementById('modalOverlay').style.display = 'none';
+    document.querySelectorAll('.custom-modal').forEach(m => m.style.display = 'none');
+};
